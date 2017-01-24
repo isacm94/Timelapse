@@ -17,6 +17,7 @@
 package rogeliorb.camara2;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -135,10 +136,10 @@ public class DemoCamService extends HiddenCameraService {
         String timeStamp = new SimpleDateFormat(FORMAT_DATE).format(Calendar.getInstance().getTime());
         String filename = "IMG_" + timeStamp + ".png";
 
-        //File ruta_sd = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+        File ruta_sd = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
         //File ruta_sd = Environment.getExternalStorageDirectory();
 
-        File ruta_sd = getPathSD();
+        //File ruta_sd = getPathSD();
 
         // Create imageDir
         File fileImage = new File(ruta_sd, filename);
@@ -270,4 +271,6 @@ public class DemoCamService extends HiddenCameraService {
 
         stopSelf();
     }
+
+
 }
