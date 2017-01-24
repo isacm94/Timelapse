@@ -15,5 +15,6 @@
   -->
 
 <resources>
-    <string name="app_name">Android Hidden Camera</string>
+    <string name="app_name">Timelapse Parato</string>
+    <string name="title_button_service">Lanzar servicio</string>
 </resources>

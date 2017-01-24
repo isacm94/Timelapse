@@ -17,7 +17,6 @@
 package rogeliorb.camara2;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -39,12 +38,8 @@ import com.androidhiddencamera.config.CameraFacing;
 import com.androidhiddencamera.config.CameraImageFormat;
 import com.androidhiddencamera.config.CameraResolution;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -68,7 +63,6 @@ public class DemoCamService extends HiddenCameraService {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-
             if (HiddenCameraUtils.canOverDrawOtherApps(this)) {
                 final CameraConfig cameraConfig = new CameraConfig()
                         .getBuilder(this)
@@ -111,6 +105,7 @@ public class DemoCamService extends HiddenCameraService {
             //TODO Ask your parent activity for providing runtime permission
             Toast.makeText(this, "Camera permission not available", Toast.LENGTH_SHORT).show();
         }
+
         return START_NOT_STICKY;
     }
 
@@ -124,9 +119,6 @@ public class DemoCamService extends HiddenCameraService {
 
         copyImageToSD(bitmap);
 
-        //Log.d(TAG, "Tamaño: " + imageFile.length());
-        //Log.d(TAG, "RutaA: " + imageFile.getAbsolutePath());
-        //Log.d(TAG, "Ruta: " + imageFile.getPath());
         stopSelf();
     }
 
@@ -136,7 +128,7 @@ public class DemoCamService extends HiddenCameraService {
         String timeStamp = new SimpleDateFormat(FORMAT_DATE).format(Calendar.getInstance().getTime());
         String filename = "IMG_" + timeStamp + ".png";
 
-       // File ruta_sd = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+        // File ruta_sd = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
         //File ruta_sd = Environment.getExternalStorageDirectory();
         File ruta_sd = getPathSD();
 
@@ -149,63 +141,48 @@ public class DemoCamService extends HiddenCameraService {
             // Use the compress method on the BitMap object to write image to the OutputStream
             bitmapImage.compress(Bitmap.CompressFormat.PNG, 100, fos);
 
-            Log.i(TAG, "Foto "+cont+" copiada");
+            Log.i(TAG, "Foto " + cont + " copiada");
             Log.d(TAG, "Tamaño: " + fileImage.length());
             Log.d(TAG, "RutaA: " + fileImage.getAbsolutePath());
             Log.d(TAG, "Ruta: " + fileImage.getPath());
 
             fos.close();
         } catch (Exception e) {
-            e.printStackTrace();
             Log.e(TAG, "Error copiando archivo");
+            e.printStackTrace();
         }
 
     }
 
-    public File getPathSD(){
+    public File getPathSD() {
         String path = "";
         File ruta_sd;
 
-        if(new File("/storage/sdcard1/").exists()) {
+        if (new File("/storage/sdcard1/").exists()) {
             path = "/storage/sdcard1/";
             ruta_sd = new File(path);
-        }
-        else if(new File("/storage/extSdCard/").exists())
-        {
-            path="/storage/extSdCard/";
+        } else if (new File("/storage/extSdCard/").exists()) {
+            path = "/storage/extSdCard/";
             ruta_sd = new File(path);
-        }
-        else if(new File("/storage/usbcard1/").exists())
-        {
-            path="/storage/usbcard1/";
+        } else if (new File("/storage/usbcard1/").exists()) {
+            path = "/storage/usbcard1/";
             ruta_sd = new File(path);
-        }
-        else if(new File("/storage/sdcard0/").exists())
-        {
-            path="/storage/sdcard0/";
+        } else if (new File("/storage/sdcard0/").exists()) {
+            path = "/storage/sdcard0/";
             ruta_sd = new File(path);
-        }
-        else if(new File("/storage/extSdCard/").exists())
-        {
-            path="/storage/extSdCard/";
+        } else if (new File("/storage/extSdCard/").exists()) {
+            path = "/storage/extSdCard/";
             ruta_sd = new File(path);
-        }
-        else if(new File("/storage/sdcard1/").exists())
-        {
-            path="/storage/sdcard1/";
+        } else if (new File("/storage/sdcard1/").exists()) {
+            path = "/storage/sdcard1/";
             ruta_sd = new File(path);
-        }
-        else if(new File("/storage/usbcard1/").exists())
-        {
-            path="/storage/usbcard1/";
+        } else if (new File("/storage/usbcard1/").exists()) {
+            path = "/storage/usbcard1/";
             ruta_sd = new File(path);
-        }
-        else if(new File("/storage/sdcard0/").exists())
-        {
-            path="/storage/sdcard0/";
+        } else if (new File("/storage/sdcard0/").exists()) {
+            path = "/storage/sdcard0/";
             ruta_sd = new File(path);
-        }
-        else{
+        } else {
             ruta_sd = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);//Sino mandamos el directorio publico del teléfono
         }
 

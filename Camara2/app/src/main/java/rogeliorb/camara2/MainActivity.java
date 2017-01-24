@@ -18,13 +18,18 @@ package rogeliorb.camara2;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import com.androidhiddencamera.HiddenCameraFragment;
 
@@ -45,30 +50,19 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         verifyStoragePermissions(MainActivity.this);
+        //checkPermiso();
 
-        findViewById(R.id.btn_using_activity).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivity(new Intent(MainActivity.this, DemoCamActivity.class));
-            }
-        });
+        /*ActivityCompat.requestPermissions(
+                this,
+                PERMISSIONS_STORAGE,
+                REQUEST_EXTERNAL_STORAGE
+        );*/
+
 
         findViewById(R.id.btn_using_service).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startService(new Intent(MainActivity.this, DemoCamService.class));
-            }
-        });
-
-        findViewById(R.id.btn_using_fragment).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mHiddenCameraFragment = new DemoCamFragment();
-
-                getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.fragment_container,mHiddenCameraFragment)
-                        .commit();
             }
         });
     }
@@ -83,10 +77,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
     /**
      * Checks if the app has permission to write to device storage
-     *
+     * <p>
      * If the app does not has permission then the user will be prompted to grant permissions
      *
      * @param activity
@@ -96,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
         int permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
         if (permission != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(activity, "No tiene permiso", Toast.LENGTH_SHORT).show();
             Log.i("TIMELAPSE", "No tiene permiso");
 
             // We don't have permission so prompt the user
@@ -106,9 +100,77 @@ public class MainActivity extends AppCompatActivity {
             );
 
             Log.i("TIMELAPSE", "Solicitando permiso");
+        } else {
+            Toast.makeText(activity, "Tiene permiso", Toast.LENGTH_SHORT).show();
+            Log.i("TIMELAPSE", "Tiene permiso");
         }
-        else{
-            Log.i("TIMELAPSE", "No tiene permiso");
+    }
+
+
+    public void checkPermiso() {
+        // Here, thisActivity is the current activity
+        if (ContextCompat.checkSelfPermission(MainActivity.this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+
+                // Show an expanation to the user asynchronously -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+                //showExplanation();
+                //mDialogHandler.sendEmptyMessage(100);
+
+                Log.i("TIMELAPSE", "Aqui");
+
+            } else {
+
+                // No explanation needed, we can request the permission.
+
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        REQUEST_EXTERNAL_STORAGE);
+
+                // REQUEST_READWRITE_STORAGE is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+
+                Log.i("TIMELAPSE", "alli");
+            }
+        } else {
+            Log.i("TIMELAPSE", "Tiene permiso");
+        }
+    }
+
+    private static void requestPermission(final Context context) {
+
+        final int REQUEST_WRITE_EXTERNAL_STORAGE = 1;
+        if (ActivityCompat.shouldShowRequestPermissionRationale((Activity) context, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            // Provide an additional rationale to the user if the permission was not granted
+            // and the user would benefit from additional context for the use of the permission.
+            // For example if the user has previously denied the permission.
+
+            new AlertDialog.Builder(context)
+                    .setMessage("¿Desear dar permiso para la tarjeta sd?")
+                    .setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            ActivityCompat.requestPermissions((Activity) context,
+                                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                    REQUEST_WRITE_EXTERNAL_STORAGE);
+                        }
+                    }).show();
+
+            Log.i("TIMELAPSE", "Diálogo");
+        } else {
+            // permission has not been granted yet. Request it directly.
+            ActivityCompat.requestPermissions((Activity) context,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    REQUEST_WRITE_EXTERNAL_STORAGE);
+
+            Log.i("TIMELAPSE", "ha solicitado permiso");
         }
     }
 
