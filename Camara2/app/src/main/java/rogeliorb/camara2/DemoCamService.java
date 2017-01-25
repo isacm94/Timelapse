@@ -17,16 +17,19 @@
 package rogeliorb.camara2;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -41,7 +44,12 @@ import com.androidhiddencamera.config.CameraResolution;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Created by Keval on 11-Nov-16.
@@ -68,20 +76,11 @@ public class DemoCamService extends HiddenCameraService {
                         .getBuilder(this)
                         .setCameraFacing(CameraFacing.REAR_FACING_CAMERA)
                         .setCameraResolution(CameraResolution.HIGH_RESOLUTION)
-                        .setImageFormat(CameraImageFormat.FORMAT_PNG)
+                        .setImageFormat(CameraImageFormat.FORMAT_JPEG)
                         .build();
 
                 startCamera(cameraConfig);
 
-                /*
-                new android.os.Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        takePicture();
-                        Log.i(TAG, "Foto hecha");
-                    }
-                }, 0);
-                */
                 final Handler handler = new Handler();
                 handler.postDelayed(new Runnable() {
                     public void run() {
@@ -124,9 +123,9 @@ public class DemoCamService extends HiddenCameraService {
 
     private void copyImageToSD(Bitmap bitmapImage) {
 
-        String FORMAT_DATE = "dd-MM-yyyy_HH:mm:ss";
+        String FORMAT_DATE = "dd-MM-yyyy_HHmmss";
         String timeStamp = new SimpleDateFormat(FORMAT_DATE).format(Calendar.getInstance().getTime());
-        String filename = "IMG_" + timeStamp + ".png";
+        String filename = "IMG_" + timeStamp + ".jpg";
 
         // File ruta_sd = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
         //File ruta_sd = Environment.getExternalStorageDirectory();
@@ -139,7 +138,7 @@ public class DemoCamService extends HiddenCameraService {
         try {
             fos = new FileOutputStream(fileImage);
             // Use the compress method on the BitMap object to write image to the OutputStream
-            bitmapImage.compress(Bitmap.CompressFormat.PNG, 100, fos);
+            bitmapImage.compress(Bitmap.CompressFormat.JPEG, 100, fos);
 
             Log.i(TAG, "Foto " + cont + " copiada");
             Log.d(TAG, "Tamaño: " + fileImage.length());
@@ -149,17 +148,47 @@ public class DemoCamService extends HiddenCameraService {
             fos.close();
         } catch (Exception e) {
             Log.e(TAG, "Error copiando archivo");
+
             e.printStackTrace();
         }
 
     }
 
-    public File getPathSD() {
-        String path = "";
-        File ruta_sd;
+    public String[] getStorageDirectories() {
+        String [] storageDirectories;
+        String rawSecondaryStoragesStr = System.getenv("SECONDARY_STORAGE");
 
-        if (new File("/storage/sdcard1/").exists()) {
-            path = "/storage/sdcard1/";
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            List<String> results = new ArrayList<String>();
+            Context ctxt = this;
+            File[] externalDirs = ctxt.getExternalFilesDirs(null);
+            for (File file : externalDirs) {
+                String path = file.getPath().split("/Android")[0];
+                if((Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && Environment.isExternalStorageRemovable(file))
+                        || rawSecondaryStoragesStr != null && rawSecondaryStoragesStr.contains(path)){
+                    results.add(path);
+                }
+            }
+            storageDirectories = results.toArray(new String[0]);
+        }else{
+            final Set<String> rv = new HashSet<String>();
+
+            if (!TextUtils.isEmpty(rawSecondaryStoragesStr)) {
+                final String[] rawSecondaryStorages = rawSecondaryStoragesStr.split(File.pathSeparator);
+                Collections.addAll(rv, rawSecondaryStorages);
+            }
+            storageDirectories = rv.toArray(new String[rv.size()]);
+        }
+        return storageDirectories;
+    }
+
+    public File getPathSD() {
+        //String[] storage = getStorageDirectories();
+        String path = "";
+        File ruta_sd = new File("/storage/sdcard1/trianasat");
+
+        /*if (new File("/storage/sdcard1/Pictures/").exists()) {
+            path = "/storage/sdcard1/Pictures/";
             ruta_sd = new File(path);
         } else if (new File("/storage/extSdCard/").exists()) {
             path = "/storage/extSdCard/";
@@ -182,45 +211,19 @@ public class DemoCamService extends HiddenCameraService {
         } else if (new File("/storage/sdcard0/").exists()) {
             path = "/storage/sdcard0/";
             ruta_sd = new File(path);
+        } else if (new File("/sdcard/").exists()) {//emulador
+            path = "/sdcard/";
+            ruta_sd = new File(path);
         } else {
             ruta_sd = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);//Sino mandamos el directorio publico del teléfono
         }
 
+        //ruta_sd = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        ruta_sd = new File("/mnt/ext_card/trianasat/");
+        */
+
         return ruta_sd;
     }
-    /*public void copyImageToSD(File imageFile){
-
-        String FORMAT_DATE = "dd-MM-yyyy_HH:mm:ss";
-        String timeStamp = new SimpleDateFormat(FORMAT_DATE).format(Calendar.getInstance().getTime());
-        String filename = "IMG_" + timeStamp + ".png";
-
-        try
-        {
-            File ruta_sd = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-
-            //File f = new File(ruta_sd.getAbsolutePath(), filename);
-
-            imageFile = new File(ruta_sd.getAbsolutePath(), filename);
-
-            BufferedReader fin =
-                    new BufferedReader(
-                            new InputStreamReader(
-                                    new FileInputStream(imageFile)));
-
-            fin.close();
-
-            Log.i(TAG, "Copiado");
-            Log.d(TAG, "Tamaño: " + imageFile.length());
-            Log.d(TAG, "RutaA: " + imageFile.getAbsolutePath());
-            Log.d(TAG, "Ruta: " + imageFile.getPath());
-        }
-        catch (Exception ex)
-        {
-            ex.printStackTrace();
-            Log.e(TAG, "Error al leer fichero desde tarjeta SD");
-        }
-    }*/
-
 
     @Override
     public void onCameraError(@CameraError.CameraErrorCodes int errorCode) {
