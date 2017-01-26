@@ -17,6 +17,7 @@
 package rogeliorb.camara2;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -29,6 +30,7 @@ import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
@@ -127,9 +129,13 @@ public class DemoCamService extends HiddenCameraService {
         String timeStamp = new SimpleDateFormat(FORMAT_DATE).format(Calendar.getInstance().getTime());
         String filename = "IMG_" + timeStamp + ".jpg";
 
-        // File ruta_sd = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+         //File ruta_sd = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES,);
         //File ruta_sd = Environment.getExternalStorageDirectory();
+        //File ruta_sd = Environment.getDownloadCacheDirectory();
         File ruta_sd = getPathSD();
+        //File ruta_sd = getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        //String[] rutas = getStorageDirectories();
+       //File ruta_sd = new File(rutas[0]);
 
         // Create imageDir
         File fileImage = new File(ruta_sd, filename);
@@ -161,12 +167,13 @@ public class DemoCamService extends HiddenCameraService {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             List<String> results = new ArrayList<String>();
             Context ctxt = this;
-            File[] externalDirs = ctxt.getExternalFilesDirs(null);
+            File[] externalDirs = ctxt.getExternalFilesDirs(Environment.DIRECTORY_PICTURES);
             for (File file : externalDirs) {
                 String path = file.getPath().split("/Android")[0];
                 if((Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && Environment.isExternalStorageRemovable(file))
                         || rawSecondaryStoragesStr != null && rawSecondaryStoragesStr.contains(path)){
-                    results.add(path);
+                    //results.add(path);
+                    results.add(file.getAbsolutePath());
                 }
             }
             storageDirectories = results.toArray(new String[0]);
@@ -185,7 +192,10 @@ public class DemoCamService extends HiddenCameraService {
     public File getPathSD() {
         //String[] storage = getStorageDirectories();
         String path = "";
-        File ruta_sd = new File("/storage/sdcard1/trianasat");
+        File ruta_sd = new File("/storage/sdcard1/Pictures");
+
+        //File ruta_sd = new File(getRemovablePath());
+
 
         /*if (new File("/storage/sdcard1/Pictures/").exists()) {
             path = "/storage/sdcard1/Pictures/";
@@ -223,6 +233,65 @@ public class DemoCamService extends HiddenCameraService {
         */
 
         return ruta_sd;
+    }
+
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    private String getRemovablePath(){
+        String secondaryStore = System.getenv("SECONDARY_STORAGE");
+        if (secondaryStore != null){
+            secondaryStore = secondaryStore.split(":")[0];
+            secondaryStore += File.separator + "Backups/";
+            File file = new File(secondaryStore);
+            if((file.mkdir() || file.isDirectory()) /*&& isFileWritable(secondaryStore)*/){
+                return secondaryStore;
+            } else {
+                secondaryStore = null;
+            }
+        }
+
+        // try again by fix address
+        if(secondaryStore == null){
+            if (new File("/Removable/MicroSD/").exists()){
+                secondaryStore = "/Removable/MicroSD/";
+            } else if( new File("/storage/extSdCard/").exists()){
+                secondaryStore = "/storage/extSdCard/";
+            } else if( new File("/storage/sdcard1/").exists()){
+                secondaryStore = "/storage/sdcard1/";
+            } else if( new File("/storage/usbcard1/").exists()){
+                secondaryStore = "/storage/usbcard1/";
+            } else if( new File("/storage/external_SD/").exists()){
+                secondaryStore = "/storage/external_SD/";
+            }
+            /** add more fix addresses you know */
+            secondaryStore += "Backups/";
+            File file = new File(secondaryStore);
+            if((file.mkdir() || file.isDirectory()) /*&& isFileWritable(secondaryStore)*/){
+                return secondaryStore;
+            } else {
+                secondaryStore = null;
+            }
+
+        }
+        /** Try data folder*/
+        if(secondaryStore == null){
+            int ver = Build.VERSION.SDK_INT;
+            File[] externalRoots = null;
+            if(ver <= Build.VERSION_CODES.JELLY_BEAN_MR2){
+                externalRoots = ContextCompat.getExternalFilesDirs(getBaseContext(), null);
+            } else {
+                externalRoots = getExternalFilesDirs(null);
+            }
+
+            if(externalRoots.length > 1){
+                secondaryStore = externalRoots[1].getAbsolutePath() + File.separator;
+                return secondaryStore;
+            } else {
+                secondaryStore = null;
+            }
+        }
+
+
+        return secondaryStore;
     }
 
     @Override

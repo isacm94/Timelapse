@@ -49,11 +49,19 @@ public class MainActivity extends AppCompatActivity {
     private static String[] PERMISSIONS_CAMERA = {
             Manifest.permission.CAMERA
     };
+
+    //Permisos de system alert
+    private static final int REQUEST_SYSTEM_ALERT = 3;
+    private static String[] PERMISSIONS_SYSTEM_ALERT = {
+            Manifest.permission.SYSTEM_ALERT_WINDOW
+    };
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        verifySystemAlertPermissions(MainActivity.this);
         verifyStoragePermissions(MainActivity.this);
         verifyCameraPermissions(MainActivity.this);
 
@@ -97,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
                     REQUEST_EXTERNAL_STORAGE
             );
 
-            Log.i("TIMELAPSE", "Solicitando permiso de tarjeta SD");
+            Log.i("TIMELAPSE", "Permiso solicitado de tarjeta SD");
         } else {
             Log.i("TIMELAPSE", "Tiene permiso de tarjeta SD");
             Toast.makeText(activity, "Tiene permiso de tarjeta SD", Toast.LENGTH_SHORT).show();
@@ -119,10 +127,32 @@ public class MainActivity extends AppCompatActivity {
                     REQUEST_CAMERA
             );
 
-            Log.i("TIMELAPSE", "Solicitando permiso");
+            Log.i("TIMELAPSE", "Permiso solicitado");
         } else {
             Log.i("TIMELAPSE", "Tiene permiso de cámara");
             Toast.makeText(activity, "Tiene permiso de cámara", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public static void verifySystemAlertPermissions(Activity activity) {
+        // Check if we have write permission
+        int permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.CAMERA);
+
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            Log.i("TIMELAPSE", "No tiene permiso de system alert");
+            Toast.makeText(activity, "No tiene permiso de system alert", Toast.LENGTH_SHORT).show();
+
+            // We don't have permission so prompt the user
+            ActivityCompat.requestPermissions(
+                    activity,
+                    PERMISSIONS_SYSTEM_ALERT,
+                    REQUEST_SYSTEM_ALERT
+            );
+
+            Log.i("TIMELAPSE", "Permiso solicitado");
+        } else {
+            Log.i("TIMELAPSE", "Tiene permiso de system alert");
+            Toast.makeText(activity, "Tiene permiso de system alert", Toast.LENGTH_SHORT).show();
         }
     }
 }
