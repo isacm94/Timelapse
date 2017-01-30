@@ -23,6 +23,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
@@ -52,6 +53,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import static android.R.attr.data;
 
 /**
  * Created by Keval on 11-Nov-16.
@@ -113,29 +116,35 @@ public class DemoCamService extends HiddenCameraService {
     @Override
     public void onImageCapture(@NonNull File imageFile) {
         String dir = imageFile.getAbsolutePath();
+        Matrix matrix = new Matrix();
+        matrix.postRotate(90);
 
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.RGB_565;
         Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
 
+        bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
         copyImageToSD(bitmap);
+
+        if(imageFile.delete()){
+            Log.i("DELETE",imageFile.getAbsolutePath());
+        }else
+            Log.e("NO DELETE",imageFile.getAbsolutePath());
 
         stopSelf();
     }
 
     private void copyImageToSD(Bitmap bitmapImage) {
 
-        String FORMAT_DATE = "dd-MM-yyyy_HHmmss";
+        String FORMAT_DATE = "dd-MM-yy_HH:mm:ss";
         String timeStamp = new SimpleDateFormat(FORMAT_DATE).format(Calendar.getInstance().getTime());
         String filename = "IMG_" + timeStamp + ".jpg";
 
-         //File ruta_sd = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES,);
-        //File ruta_sd = Environment.getExternalStorageDirectory();
-        //File ruta_sd = Environment.getDownloadCacheDirectory();
-        File ruta_sd = getPathSD();
-        //File ruta_sd = getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        //String[] rutas = getStorageDirectories();
-       //File ruta_sd = new File(rutas[0]);
+        File ruta_sd = new File("/storage/emulated/0/Android/data/rogeliorb.camara2/files");
+
+        if(!ruta_sd.exists()){
+            ruta_sd.mkdir();
+        }
 
         // Create imageDir
         File fileImage = new File(ruta_sd, filename);
@@ -158,140 +167,6 @@ public class DemoCamService extends HiddenCameraService {
             e.printStackTrace();
         }
 
-    }
-
-    public String[] getStorageDirectories() {
-        String [] storageDirectories;
-        String rawSecondaryStoragesStr = System.getenv("SECONDARY_STORAGE");
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            List<String> results = new ArrayList<String>();
-            Context ctxt = this;
-            File[] externalDirs = ctxt.getExternalFilesDirs(Environment.DIRECTORY_PICTURES);
-            for (File file : externalDirs) {
-                String path = file.getPath().split("/Android")[0];
-                if((Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && Environment.isExternalStorageRemovable(file))
-                        || rawSecondaryStoragesStr != null && rawSecondaryStoragesStr.contains(path)){
-                    //results.add(path);
-                    results.add(file.getAbsolutePath());
-                }
-            }
-            storageDirectories = results.toArray(new String[0]);
-        }else{
-            final Set<String> rv = new HashSet<String>();
-
-            if (!TextUtils.isEmpty(rawSecondaryStoragesStr)) {
-                final String[] rawSecondaryStorages = rawSecondaryStoragesStr.split(File.pathSeparator);
-                Collections.addAll(rv, rawSecondaryStorages);
-            }
-            storageDirectories = rv.toArray(new String[rv.size()]);
-        }
-        return storageDirectories;
-    }
-
-    public File getPathSD() {
-        //String[] storage = getStorageDirectories();
-        String path = "";
-        File ruta_sd = new File("/storage/sdcard1/Pictures");
-
-        //File ruta_sd = new File(getRemovablePath());
-
-
-        /*if (new File("/storage/sdcard1/Pictures/").exists()) {
-            path = "/storage/sdcard1/Pictures/";
-            ruta_sd = new File(path);
-        } else if (new File("/storage/extSdCard/").exists()) {
-            path = "/storage/extSdCard/";
-            ruta_sd = new File(path);
-        } else if (new File("/storage/usbcard1/").exists()) {
-            path = "/storage/usbcard1/";
-            ruta_sd = new File(path);
-        } else if (new File("/storage/sdcard0/").exists()) {
-            path = "/storage/sdcard0/";
-            ruta_sd = new File(path);
-        } else if (new File("/storage/extSdCard/").exists()) {
-            path = "/storage/extSdCard/";
-            ruta_sd = new File(path);
-        } else if (new File("/storage/sdcard1/").exists()) {
-            path = "/storage/sdcard1/";
-            ruta_sd = new File(path);
-        } else if (new File("/storage/usbcard1/").exists()) {
-            path = "/storage/usbcard1/";
-            ruta_sd = new File(path);
-        } else if (new File("/storage/sdcard0/").exists()) {
-            path = "/storage/sdcard0/";
-            ruta_sd = new File(path);
-        } else if (new File("/sdcard/").exists()) {//emulador
-            path = "/sdcard/";
-            ruta_sd = new File(path);
-        } else {
-            ruta_sd = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);//Sino mandamos el directorio publico del teléfono
-        }
-
-        //ruta_sd = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        ruta_sd = new File("/mnt/ext_card/trianasat/");
-        */
-
-        return ruta_sd;
-    }
-
-    @TargetApi(Build.VERSION_CODES.KITKAT)
-    private String getRemovablePath(){
-        String secondaryStore = System.getenv("SECONDARY_STORAGE");
-        if (secondaryStore != null){
-            secondaryStore = secondaryStore.split(":")[0];
-            secondaryStore += File.separator + "Backups/";
-            File file = new File(secondaryStore);
-            if((file.mkdir() || file.isDirectory()) /*&& isFileWritable(secondaryStore)*/){
-                return secondaryStore;
-            } else {
-                secondaryStore = null;
-            }
-        }
-
-        // try again by fix address
-        if(secondaryStore == null){
-            if (new File("/Removable/MicroSD/").exists()){
-                secondaryStore = "/Removable/MicroSD/";
-            } else if( new File("/storage/extSdCard/").exists()){
-                secondaryStore = "/storage/extSdCard/";
-            } else if( new File("/storage/sdcard1/").exists()){
-                secondaryStore = "/storage/sdcard1/";
-            } else if( new File("/storage/usbcard1/").exists()){
-                secondaryStore = "/storage/usbcard1/";
-            } else if( new File("/storage/external_SD/").exists()){
-                secondaryStore = "/storage/external_SD/";
-            }
-            /** add more fix addresses you know */
-            secondaryStore += "Backups/";
-            File file = new File(secondaryStore);
-            if((file.mkdir() || file.isDirectory()) /*&& isFileWritable(secondaryStore)*/){
-                return secondaryStore;
-            } else {
-                secondaryStore = null;
-            }
-
-        }
-        /** Try data folder*/
-        if(secondaryStore == null){
-            int ver = Build.VERSION.SDK_INT;
-            File[] externalRoots = null;
-            if(ver <= Build.VERSION_CODES.JELLY_BEAN_MR2){
-                externalRoots = ContextCompat.getExternalFilesDirs(getBaseContext(), null);
-            } else {
-                externalRoots = getExternalFilesDirs(null);
-            }
-
-            if(externalRoots.length > 1){
-                secondaryStore = externalRoots[1].getAbsolutePath() + File.separator;
-                return secondaryStore;
-            } else {
-                secondaryStore = null;
-            }
-        }
-
-
-        return secondaryStore;
     }
 
     @Override
@@ -319,6 +194,4 @@ public class DemoCamService extends HiddenCameraService {
 
         stopSelf();
     }
-
-
 }
