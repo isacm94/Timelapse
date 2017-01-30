@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="nivel_bateria">
+        <item>40%</item>
+        <item>30%</item>
+        <item>20%</item>
+    </string-array>
+    <string-array name="nivel_bateria_values">
+        <item>40%</item>
+        <item>30%</item>
+        <item>20%</item>
+    </string-array>
+    <string-array name="frecuencia_fotos">
+        <item>15s</item>
+        <item>1min</item>
+        <item>4min</item>
+    </string-array>
+    <string-array name="frecuencia_fotos_values">
+        <item>15s</item>
+        <item>1min</item>
+        <item>4min</item>
+    </string-array>
+    <string-array name="memoria">
+        <item>16GB</item>
+        <item>8GB</item>
+        <item>4GB</item>
+    </string-array>
+    <string-array name="memoria_values">
+        <item>16GB</item>
+        <item>8GB</item>
+        <item>4GB</item>
+    </string-array>
+    <string-array name="calidad_foto">
+        <item>Alta</item>
+        <item>Media</item>
+        <item>Baja</item>
+    </string-array>
+    <string-array name="calidad_fotos_values">
+        <item>Alta</item>
+        <item>Media</item>
+        <item>Baja</item>
+    </string-array>
+</resources>
