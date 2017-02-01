@@ -1,14 +1,14 @@
-package salesianostriana.timelapse;
+package salesianostriana.timelapse.Pojos;
 
 /**
  * Created by Isabel on 30/01/2017.
  */
 
 public class Preferencia {
-    String bateria;
-    String calidad;
-    String memoria;
-    String frecuencia;
+    private String bateria;
+    private String calidad;
+    private String memoria;
+    private String frecuencia;
 
     /*CONSTRUCTORES*/
     public Preferencia() {

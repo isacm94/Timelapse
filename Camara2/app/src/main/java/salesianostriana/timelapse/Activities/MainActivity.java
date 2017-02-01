@@ -14,18 +14,24 @@
  * limitations under the License.
  */
 
-package salesianostriana.timelapse;
+package salesianostriana.timelapse.Activities;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import salesianostriana.timelapse.DemoCamService;
+import salesianostriana.timelapse.Pojos.Preferencia;
+import salesianostriana.timelapse.R;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -51,12 +57,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         //Muestra las preferencias guardadas
-        Preferencia preferencia = getPreferencia();
-
-        textViewBateria.setText(getString(R.string.title_bateria) + ": " + preferencia.getBateria());
-        textViewFrecuencia.setText(getString(R.string.title_frecuencia) + ": " + preferencia.getFrecuencia());
-        textViewMemoria.setText(getString(R.string.title_memoria) + ": " + preferencia.getMemoria());
-        textViewCalidad.setText(getString(R.string.title_calidad) + ": " + preferencia.getCalidad());
+        muestraPreferencias();
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -65,7 +66,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public boolean onOptionsItemSelected(MenuItem item) {
-
 
         switch (item.getItemId()) {
             case R.id.settings: {
@@ -91,5 +91,21 @@ public class MainActivity extends AppCompatActivity {
         preferencia = new Preferencia(bateria, calidad, memoria, frecuencia);
 
         return preferencia;
+    }
+
+    public void muestraPreferencias(){
+        Preferencia preferencia = getPreferencia();
+
+        textViewBateria.setText(getString(R.string.title_bateria) + ": " + preferencia.getBateria());
+        textViewFrecuencia.setText(getString(R.string.title_frecuencia) + ": " + preferencia.getFrecuencia());
+        textViewMemoria.setText(getString(R.string.title_memoria) + ": " + preferencia.getMemoria());
+        textViewCalidad.setText(getString(R.string.title_calidad) + ": " + preferencia.getCalidad());
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        muestraPreferencias();//Actualiza vista activity_main
     }
 }

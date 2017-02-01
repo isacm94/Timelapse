@@ -17,12 +17,16 @@
 package salesianostriana.timelapse;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.os.BatteryManager;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -45,6 +49,8 @@ import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
+import salesianostriana.timelapse.Pojos.Preferencia;
+
 /**
  * Created by Keval on 11-Nov-16.
  *
@@ -56,6 +62,15 @@ public class DemoCamService extends HiddenCameraService {
     String TAG = "TIMELAPSE_INFO";
     int cont = 0;
     Preferencia preferencia;
+    int bateria;
+
+    private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            bateria = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+            Log.i(TAG, "Bateria: " + bateria + "%");
+        }
+    };
 
     @Nullable
     @Override
@@ -65,11 +80,13 @@ public class DemoCamService extends HiddenCameraService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        this.registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        Log.i(TAG, "Bateria 2: " + bateria + "%");
 
         preferencia = getPreferencia();
 
         Toast.makeText(this, preferencia.toString(), Toast.LENGTH_SHORT).show();
-        Log.i(TAG, preferencia.toString());
+        //Log.i(TAG, preferencia.toString());
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             if (HiddenCameraUtils.canOverDrawOtherApps(this)) {
@@ -90,20 +107,21 @@ public class DemoCamService extends HiddenCameraService {
                             takePicture();
                             cont++;
                             Log.i(TAG, "Foto " + cont + " hecha");
-                            handler.postDelayed(this, 10000); //una vez iniciada, cada 2 seg
+                            handler.postDelayed(this, 10000); //una vez iniciada, cada 10 seg
                         } else
                             Log.i(TAG, "No tiene permiso");
 
                     }
                 }, 0); //Se inicia al momento
             } else {
-
                 //Open settings to grant permission for "Draw other apps".
                 HiddenCameraUtils.openDrawOverPermissionSetting(this);
             }
         } else {
+            Log.i(TAG, "3");
             Toast.makeText(this, "Camera permission not available", Toast.LENGTH_SHORT).show();
         }
+
 
         return START_NOT_STICKY;
     }
@@ -204,4 +222,6 @@ public class DemoCamService extends HiddenCameraService {
 
         return preferencia;
     }
+
+
 }

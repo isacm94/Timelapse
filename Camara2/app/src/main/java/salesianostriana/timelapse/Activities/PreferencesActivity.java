@@ -1,4 +1,4 @@
-package salesianostriana.timelapse;
+package salesianostriana.timelapse.Activities;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -7,13 +7,13 @@ import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
+import salesianostriana.timelapse.PreferenciasFragment;
+
 /**
  * Created by jarmada on 24/01/2017.
  */
 
 public class PreferencesActivity extends AppCompatActivity {
-
-    String bat, cal, memo, fre;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,6 +23,4 @@ public class PreferencesActivity extends AppCompatActivity {
                 .commit();
         SharedPreferences shaPref = PreferenceManager.getDefaultSharedPreferences(this);
     }
-
-
 }

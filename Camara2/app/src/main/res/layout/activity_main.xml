@@ -24,7 +24,7 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context=".MainActivity">
+    tools:context=".Activities.MainActivity">
 
     <Button
         android:id="@+id/btn_using_service"
@@ -64,7 +64,7 @@
         android:id="@+id/text_view_frecuencia"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/text_view_nivel_bateria"
+        android:layout_below="@id/text_view_bateria"
         android:layout_marginLeft="@dimen/margin_left"
         android:text="@string/title_frecuencia" />
 
