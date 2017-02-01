@@ -81,11 +81,10 @@ public class DemoCamService extends HiddenCameraService {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         this.registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        Log.i(TAG, "Bateria 2: " + bateria + "%");
 
         preferencia = getPreferencia();
 
-        Toast.makeText(this, preferencia.toString(), Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, preferencia.toString(), Toast.LENGTH_SHORT).show();
         //Log.i(TAG, preferencia.toString());
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
@@ -98,6 +97,7 @@ public class DemoCamService extends HiddenCameraService {
                         .build();
 
                 startCamera(cameraConfig);
+                Log.i(TAG, "Bateria handler: " + bateria + "%");
 
                 final Handler handler = new Handler();
                 handler.postDelayed(new Runnable() {
@@ -118,7 +118,6 @@ public class DemoCamService extends HiddenCameraService {
                 HiddenCameraUtils.openDrawOverPermissionSetting(this);
             }
         } else {
-            Log.i(TAG, "3");
             Toast.makeText(this, "Camera permission not available", Toast.LENGTH_SHORT).show();
         }
 
@@ -131,6 +130,7 @@ public class DemoCamService extends HiddenCameraService {
         String dir = imageFile.getAbsolutePath();
         Matrix matrix = new Matrix();
         matrix.postRotate(90);
+
 
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.RGB_565;
