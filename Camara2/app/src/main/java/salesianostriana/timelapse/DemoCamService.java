@@ -36,19 +36,18 @@ import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.androidhiddencamera.CameraConfig;
-import com.androidhiddencamera.CameraError;
-import com.androidhiddencamera.HiddenCameraService;
-import com.androidhiddencamera.HiddenCameraUtils;
-import com.androidhiddencamera.config.CameraFacing;
-import com.androidhiddencamera.config.CameraImageFormat;
-import com.androidhiddencamera.config.CameraResolution;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
+import salesianostriana.timelapse.HiddenCamera.CameraConfig;
+import salesianostriana.timelapse.HiddenCamera.CameraError;
+import salesianostriana.timelapse.HiddenCamera.HiddenCameraService;
+import salesianostriana.timelapse.HiddenCamera.HiddenCameraUtils;
+import salesianostriana.timelapse.HiddenCamera.config.CameraFacing;
+import salesianostriana.timelapse.HiddenCamera.config.CameraImageFormat;
+import salesianostriana.timelapse.HiddenCamera.config.CameraResolution;
 import salesianostriana.timelapse.Pojos.Preferencia;
 
 /**
@@ -67,7 +66,7 @@ public class DemoCamService extends HiddenCameraService {
     private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            bateria = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+            bateria = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 100);
             Log.i(TAG, "Bateria: " + bateria + "%");
         }
     };
@@ -98,25 +97,33 @@ public class DemoCamService extends HiddenCameraService {
 
                 startCamera(cameraConfig);
 
-
                 final Handler handler = new Handler();
                 handler.postDelayed(new Runnable() {
                     public void run() {
                         if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
                             registerReceiver(mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+
                             startCamera(cameraConfig);
+
+                            try {
+                                Thread.sleep(5000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+
                             takePicture();
 
                             Log.i(TAG, "Foto " + cont + " hecha");
-                            if (bateria <= preferencia.getBateria()) {
+                            if (bateria <= preferencia.getBateria() && bateria!=0) {
                                 Log.i(TAG, "Bateria handler: " + bateria + "%");
                                 Log.i("Frec:", "Ha entrao en el configurao");
+                                stopSelf();
                                 handler.postDelayed(this, preferencia.getFrecuencia() * 1000);
 
                             } else {
                                 Log.i("Frec:", "Ha entrao en el por defecto");
-                                handler.postDelayed(this, 5000);//5 Segundos
-
+                                stopSelf();
+                                handler.postDelayed(this, 10000);//4 Segundos
                             }
 
                         } else
@@ -180,9 +187,9 @@ public class DemoCamService extends HiddenCameraService {
             bitmapImage.compress(Bitmap.CompressFormat.JPEG, 100, fos);
 
             Log.i(TAG, "Foto " + cont + " copiada");
-            Log.d(TAG, "Tamaño: " + fileImage.length());
-            Log.d(TAG, "RutaA: " + fileImage.getAbsolutePath());
-            Log.d(TAG, "Ruta: " + fileImage.getPath());
+            Log.i(TAG, "Tamaño: " + fileImage.length());
+            Log.i(TAG, "RutaA: " + fileImage.getAbsolutePath());
+            Log.i(TAG, "Ruta: " + fileImage.getPath());
             cont++;
             fos.close();
         } catch (Exception e) {
