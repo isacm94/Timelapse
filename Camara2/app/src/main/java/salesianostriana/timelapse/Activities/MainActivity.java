@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         //Muestra las preferencias guardadas
-        muestraPreferencias();
+        //muestraPreferencias();
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
 
         return preferencia;
     }
-
+/*
     public void muestraPreferencias(){
         Preferencia preferencia = getPreferencia();
 
@@ -101,11 +101,11 @@ public class MainActivity extends AppCompatActivity {
         textViewMemoria.setText(getString(R.string.title_memoria) + ": " + preferencia.getMemoria());
         textViewCalidad.setText(getString(R.string.title_calidad) + ": " + preferencia.getCalidad());
     }
-
+*/
     @Override
     protected void onResume() {
         super.onResume();
 
-        muestraPreferencias();//Actualiza vista activity_main
+        //muestraPreferencias();//Actualiza vista activity_main
     }
 }

@@ -23,4 +23,6 @@ public class PreferencesActivity extends AppCompatActivity {
                 .commit();
         SharedPreferences shaPref = PreferenceManager.getDefaultSharedPreferences(this);
     }
+
+
 }

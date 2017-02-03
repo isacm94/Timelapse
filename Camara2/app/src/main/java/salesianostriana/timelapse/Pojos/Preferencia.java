@@ -1,5 +1,7 @@
 package salesianostriana.timelapse.Pojos;
 
+import static java.lang.Integer.parseInt;
+
 /**
  * Created by Isabel on 30/01/2017.
  */
@@ -22,8 +24,8 @@ public class Preferencia {
     }
 
     /*GETTERS & SETTERS*/
-    public String getBateria() {
-        return bateria;
+    public int getBateria() {
+        return parseInt(bateria);
     }
 
     public void setBateria(String bateria) {
@@ -46,8 +48,8 @@ public class Preferencia {
         this.memoria = memoria;
     }
 
-    public String getFrecuencia() {
-        return frecuencia;
+    public int getFrecuencia() {
+        return parseInt(frecuencia);
     }
 
     public void setFrecuencia(String frecuencia) {
@@ -65,4 +67,5 @@ public class Preferencia {
                 ", frecuencia='" + frecuencia + '\'' +
                 '}';
     }
+
 }

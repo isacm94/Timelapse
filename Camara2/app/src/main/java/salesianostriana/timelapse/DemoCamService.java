@@ -60,7 +60,7 @@ import salesianostriana.timelapse.Pojos.Preferencia;
 public class DemoCamService extends HiddenCameraService {
 
     String TAG = "TIMELAPSE_INFO";
-    int cont = 0;
+    int cont = 1;
     Preferencia preferencia;
     int bateria;
 
@@ -80,12 +80,12 @@ public class DemoCamService extends HiddenCameraService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        this.registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+
 
         preferencia = getPreferencia();
 
         //Toast.makeText(this, preferencia.toString(), Toast.LENGTH_SHORT).show();
-        //Log.i(TAG, preferencia.toString());
+        Log.i(TAG, preferencia.toString());
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             if (HiddenCameraUtils.canOverDrawOtherApps(this)) {
@@ -97,17 +97,28 @@ public class DemoCamService extends HiddenCameraService {
                         .build();
 
                 startCamera(cameraConfig);
-                Log.i(TAG, "Bateria handler: " + bateria + "%");
+
 
                 final Handler handler = new Handler();
                 handler.postDelayed(new Runnable() {
                     public void run() {
                         if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                            registerReceiver(mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
                             startCamera(cameraConfig);
                             takePicture();
-                            cont++;
+
                             Log.i(TAG, "Foto " + cont + " hecha");
-                            handler.postDelayed(this, 10000); //una vez iniciada, cada 10 seg
+                            if (bateria <= preferencia.getBateria()) {
+                                Log.i(TAG, "Bateria handler: " + bateria + "%");
+                                Log.i("Frec:", "Ha entrao en el configurao");
+                                handler.postDelayed(this, preferencia.getFrecuencia() * 1000);
+
+                            } else {
+                                Log.i("Frec:", "Ha entrao en el por defecto");
+                                handler.postDelayed(this, 5000);//5 Segundos
+
+                            }
+
                         } else
                             Log.i(TAG, "No tiene permiso");
 
@@ -172,7 +183,7 @@ public class DemoCamService extends HiddenCameraService {
             Log.d(TAG, "Tamaño: " + fileImage.length());
             Log.d(TAG, "RutaA: " + fileImage.getAbsolutePath());
             Log.d(TAG, "Ruta: " + fileImage.getPath());
-
+            cont++;
             fos.close();
         } catch (Exception e) {
             Log.e(TAG, "Error copiando archivo");
@@ -223,5 +234,17 @@ public class DemoCamService extends HiddenCameraService {
         return preferencia;
     }
 
+    @Override
+    public void onDestroy() {
+        // TODO Auto-generated method stub
 
+        try {
+            if (mBatInfoReceiver != null)
+                unregisterReceiver(mBatInfoReceiver);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        super.onDestroy();
+
+    }
 }
