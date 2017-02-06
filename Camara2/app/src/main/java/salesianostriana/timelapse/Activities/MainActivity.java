@@ -19,10 +19,8 @@ package salesianostriana.timelapse.Activities;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.res.Configuration;
+import android.database.SQLException;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -31,23 +29,26 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.List;
+
 import salesianostriana.timelapse.DemoCamService;
-import salesianostriana.timelapse.Pojos.Preferencia;
+import salesianostriana.timelapse.FotosDB;
+import salesianostriana.timelapse.Pojos.Foto;
 import salesianostriana.timelapse.R;
 
 public class MainActivity extends AppCompatActivity {
 
-    TextView textViewBateria, textViewFrecuencia, textViewMemoria, textViewCalidad,estadoServicio;
+    TextView estadoServicio;
+    FotosDB fotosDB;
+    String TAG = "Fotos";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         estadoServicio = (TextView) findViewById(R.id.estado_servicio);
-        textViewBateria = (TextView) findViewById(R.id.text_view_bateria);
-        textViewFrecuencia = (TextView) findViewById(R.id.text_view_frecuencia);
-        textViewMemoria = (TextView) findViewById(R.id.text_view_memoria);
-        textViewCalidad = (TextView) findViewById(R.id.text_view_calidad);
+
         estadoServicio.setText("Servicio No Activo");
         estadoServicio.setTextColor(getResources().getColor(android.R.color.holo_red_light));
 
@@ -57,10 +58,10 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Toast.makeText(MainActivity.this, "Iniciando servicio...", Toast.LENGTH_SHORT).show();
                 startService(new Intent(MainActivity.this, DemoCamService.class));
-                if(isMyServiceRunning(DemoCamService.class)){
+                if (isMyServiceRunning(DemoCamService.class)) {
                     estadoServicio.setText("Servicio Activo");
                     estadoServicio.setTextColor(getResources().getColor(android.R.color.holo_green_light));
-                }else{
+                } else {
                     estadoServicio.setText("Servicio No Activo");
                     estadoServicio.setTextColor(getResources().getColor(android.R.color.holo_red_light));
                 }
@@ -68,8 +69,23 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //Muestra las preferencias guardadas
-        //muestraPreferencias();
+        /*BASE DE DATOS LOCAL*/
+        fotosDB = new FotosDB(this);//Inicializa base de datos
+
+        insertFoto(new Foto("probando.png", 12344L, 60.0, 1));
+        insertFoto(new Foto("probando2.png", 23452345L, 40.0, 0));
+        insertFoto(new Foto("probando3.png", 3452345L, 30.0, 1));
+        insertFoto(new Foto("probando4.png", 244352L, 20.0, 0));
+        insertFoto(new Foto("probando5.png", 345L, 40.0, 1));
+
+        List<Foto> fotosSubidas = getFotosSubidas();
+        List<Foto> fotosNoSubidas = getFotosNoSubidas();
+
+        updateFoto(fotosNoSubidas.get(1).getId(), 1);
+
+        getFotosSubidas();
+        getFotosNoSubidas();
+
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -90,30 +106,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public Preferencia getPreferencia() {
-        Preferencia preferencia;
-
-        SharedPreferences shaPref = PreferenceManager.getDefaultSharedPreferences(this);
-
-        String bateria = shaPref.getString("bateria", "");
-        String calidad = shaPref.getString("calidad", "");
-        String memoria = shaPref.getString("memoria", "");
-        String frecuencia = shaPref.getString("frecuencia", "");
-
-        preferencia = new Preferencia(bateria, calidad, memoria, frecuencia);
-
-        return preferencia;
-    }
-/*
-    public void muestraPreferencias(){
-        Preferencia preferencia = getPreferencia();
-
-        textViewBateria.setText(getString(R.string.title_bateria) + ": " + preferencia.getBateria());
-        textViewFrecuencia.setText(getString(R.string.title_frecuencia) + ": " + preferencia.getFrecuencia());
-        textViewMemoria.setText(getString(R.string.title_memoria) + ": " + preferencia.getMemoria());
-        textViewCalidad.setText(getString(R.string.title_calidad) + ": " + preferencia.getCalidad());
-    }
-*/
     @Override
     protected void onResume() {
         super.onResume();
@@ -129,5 +121,106 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return false;
+    }
+
+    public void insertFoto(Foto foto) {
+        /*Abre base de datos en escritura*/
+        try {
+            fotosDB.openWrite();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        /*Inserta*/
+        try {
+            fotosDB.insert(foto);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        /*Cierra base de datos*/
+        fotosDB.close();
+    }
+
+    public List<Foto> getAllFotos() {
+        /*Abre base de datos en lectura*/
+        try {
+            fotosDB.openRead();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        /*Lee todos los registros*/
+        List<Foto> listFotos = fotosDB.getAll();
+
+        /*Cierra base de datos*/
+        fotosDB.close();
+
+        for (Foto f : listFotos) {
+            Log.d("FOTOS DB", f.toString());
+        }
+
+        return listFotos;
+    }
+
+    public List<Foto> getFotosSubidas() {
+
+        Log.d(TAG, "**************FOTOS SUBIDAS*******");
+        /*Abre base de datos en lectura*/
+        try {
+            fotosDB.openRead();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        /*Lee las fotos subidas*/
+        List<Foto> listFotos = fotosDB.getSubidas();
+
+        /*Cierra base de datos*/
+        fotosDB.close();
+
+        for (Foto f : listFotos) {
+            Log.d(TAG, f.toString());
+        }
+
+        return listFotos;
+    }
+
+    public List<Foto> getFotosNoSubidas() {
+        Log.d(TAG, "**************FOTOS NO SUBIDAS*******");
+
+        /*Abre base de datos en lectura*/
+        try {
+            fotosDB.openRead();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        /*Lee las fotos no subidas*/
+        List<Foto> listFotos = fotosDB.getNoSubidas();
+
+        /*Cierra base de datos*/
+        fotosDB.close();
+
+        for (Foto f : listFotos) {
+            Log.d(TAG, f.toString());
+        }
+
+        return listFotos;
+    }
+
+    public void updateFoto(long id, int subida) {
+        /*Abre base de datos en escritura*/
+        try {
+            fotosDB.openWrite();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        /*Actualiza foto*/
+        fotosDB.updateSubida(id, subida);
+        Log.d(TAG, "Registro con ID " + id + " actualizado. Subida = " + subida);
+        /*Cierra base de datos*/
+        fotosDB.close();
     }
 }

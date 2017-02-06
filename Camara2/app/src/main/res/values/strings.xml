@@ -15,7 +15,7 @@
   -->
 
 <resources>
-    <string name="app_name">Timelapse Parato</string>
+    <string name="app_name">Timelapse TrianaSat</string>
     <string name="title_button_service">Lanzar servicio</string>
     <string name="settings">Ajustes</string>
     <string name="title_bateria_frecuencia">Batería-Frecuencia</string>
