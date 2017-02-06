@@ -34,6 +34,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
@@ -62,12 +63,14 @@ public class DemoCamService extends HiddenCameraService {
     int cont = 1;
     Preferencia preferencia;
     int bateria;
+    TextView text;
+
 
     private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             bateria = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 100);
-            Log.i(TAG, "Bateria: " + bateria + "%");
+
         }
     };
 
@@ -79,7 +82,6 @@ public class DemoCamService extends HiddenCameraService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
 
         preferencia = getPreferencia();
 
@@ -111,19 +113,20 @@ public class DemoCamService extends HiddenCameraService {
                                 e.printStackTrace();
                             }
 
-                            takePicture();
-
-                            Log.i(TAG, "Foto " + cont + " hecha");
                             if (bateria <= preferencia.getBateria() && bateria!=0) {
-                                Log.i(TAG, "Bateria handler: " + bateria + "%");
+
                                 Log.i("Frec:", "Ha entrao en el configurao");
-                                stopSelf();
+                                takePicture();
+                                Log.i(TAG, "Foto " + cont + " hecha");
+
                                 handler.postDelayed(this, preferencia.getFrecuencia() * 1000);
 
                             } else {
                                 Log.i("Frec:", "Ha entrao en el por defecto");
-                                stopSelf();
-                                handler.postDelayed(this, 10000);//4 Segundos
+                                takePicture();
+                                Log.i(TAG, "Foto " + cont + " hecha");
+
+                                handler.postDelayed(this, 5000);//4 Segundos
                             }
 
                         } else
@@ -145,6 +148,7 @@ public class DemoCamService extends HiddenCameraService {
 
     @Override
     public void onImageCapture(@NonNull File imageFile) {
+        Log.i("Image","ImageCapture");
         String dir = imageFile.getAbsolutePath();
         Matrix matrix = new Matrix();
         matrix.postRotate(90);
@@ -167,6 +171,8 @@ public class DemoCamService extends HiddenCameraService {
 
     private void copyImageToSD(Bitmap bitmapImage) {
 
+        Log.i(TAG, "Intento de copia de Foto " + cont);
+
         String FORMAT_DATE = "dd-MM-yy_HH:mm:ss";
         String timeStamp = new SimpleDateFormat(FORMAT_DATE).format(Calendar.getInstance().getTime());
         String filename = "IMG_" + timeStamp + ".jpg";
@@ -187,9 +193,7 @@ public class DemoCamService extends HiddenCameraService {
             bitmapImage.compress(Bitmap.CompressFormat.JPEG, 100, fos);
 
             Log.i(TAG, "Foto " + cont + " copiada");
-            Log.i(TAG, "Tamaño: " + fileImage.length());
-            Log.i(TAG, "RutaA: " + fileImage.getAbsolutePath());
-            Log.i(TAG, "Ruta: " + fileImage.getPath());
+
             cont++;
             fos.close();
         } catch (Exception e) {

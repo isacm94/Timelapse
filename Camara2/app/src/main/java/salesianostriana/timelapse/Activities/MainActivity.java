@@ -16,6 +16,8 @@
 
 package salesianostriana.timelapse.Activities;
 
+import android.app.ActivityManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
@@ -35,17 +37,19 @@ import salesianostriana.timelapse.R;
 
 public class MainActivity extends AppCompatActivity {
 
-    TextView textViewBateria, textViewFrecuencia, textViewMemoria, textViewCalidad;
+    TextView textViewBateria, textViewFrecuencia, textViewMemoria, textViewCalidad,estadoServicio;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        estadoServicio = (TextView) findViewById(R.id.estado_servicio);
         textViewBateria = (TextView) findViewById(R.id.text_view_bateria);
         textViewFrecuencia = (TextView) findViewById(R.id.text_view_frecuencia);
         textViewMemoria = (TextView) findViewById(R.id.text_view_memoria);
         textViewCalidad = (TextView) findViewById(R.id.text_view_calidad);
+        estadoServicio.setText("Servicio No Activo");
+        estadoServicio.setTextColor(getResources().getColor(android.R.color.holo_red_light));
 
         //CLICK boton lanzar servricio
         findViewById(R.id.btn_using_service).setOnClickListener(new View.OnClickListener() {
@@ -53,6 +57,14 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Toast.makeText(MainActivity.this, "Iniciando servicio...", Toast.LENGTH_SHORT).show();
                 startService(new Intent(MainActivity.this, DemoCamService.class));
+                if(isMyServiceRunning(DemoCamService.class)){
+                    estadoServicio.setText("Servicio Activo");
+                    estadoServicio.setTextColor(getResources().getColor(android.R.color.holo_green_light));
+                }else{
+                    estadoServicio.setText("Servicio No Activo");
+                    estadoServicio.setTextColor(getResources().getColor(android.R.color.holo_red_light));
+                }
+
             }
         });
 
@@ -107,5 +119,15 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
 
         //muestraPreferencias();//Actualiza vista activity_main
+    }
+
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

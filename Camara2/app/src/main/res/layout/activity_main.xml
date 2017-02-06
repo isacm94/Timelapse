@@ -96,4 +96,15 @@
         android:layout_marginLeft="@dimen/margin_left"
         android:text="@string/title_calidad" />
 
+    <TextView
+        android:text=""
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/text_view_calidad"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="48dp"
+        android:textSize="20dp"
+        android:id="@+id/estado_servicio" />
+
+
 </RelativeLayout>

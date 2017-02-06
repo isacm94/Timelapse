@@ -113,8 +113,7 @@ class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
                 throw new RuntimeException("Invalid camera resolution.");
         }
         parameters.setPictureSize(cameraSize.width, cameraSize.height);
-        Log.i("parameters", "Supported Exposure Modes:" + parameters.get("v-mode-values"));
-        Log.i("parameters", "Supported White Balance Modes:" + parameters.get("whitebalance-values"));
+
 
         requestLayout();
         mCamera.setParameters(parameters);
