@@ -25,6 +25,9 @@ public class Preferencia {
 
     /*GETTERS & SETTERS*/
     public int getBateria() {
+        if (bateria.equals("")) {
+            bateria = "0";
+        }
         return parseInt(bateria);
     }
 
@@ -40,8 +43,11 @@ public class Preferencia {
         this.calidad = calidad;
     }
 
-    public String getMemoria() {
-        return memoria;
+    public int getMemoria() {
+        if(memoria.equals("")){
+            memoria = "0";
+        }
+        return Integer.parseInt(memoria);
     }
 
     public void setMemoria(String memoria) {

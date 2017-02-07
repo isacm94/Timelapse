@@ -19,6 +19,7 @@ package salesianostriana.timelapse;
 import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -26,10 +27,15 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.BatteryManager;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.StatFs;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -37,11 +43,18 @@ import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 
+import salesianostriana.timelapse.Activities.MainActivity;
 import salesianostriana.timelapse.HiddenCamera.CameraConfig;
 import salesianostriana.timelapse.HiddenCamera.CameraError;
 import salesianostriana.timelapse.HiddenCamera.HiddenCameraService;
@@ -65,12 +78,22 @@ public class DemoCamService extends HiddenCameraService {
     int bateria;
     TextView text;
 
+    private int getMemoriaActual(){
+        StatFs stat_fs = new StatFs(Environment.getExternalStorageDirectory().getPath());
+        double avail_sd_space = (double) stat_fs.getAvailableBlocks() * (double) stat_fs.getBlockSize();
+        double GB_Available = (avail_sd_space / 1073741824);
+
+        String numberFormat = String.format("%f", GB_Available);
+        return Integer.parseInt(numberFormat.split(",")[0]);
+
+    }
+
 
     private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             bateria = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 100);
-
+            Log.d(TAG, bateria+"%");
         }
     };
 
@@ -104,7 +127,26 @@ public class DemoCamService extends HiddenCameraService {
                     public void run() {
                         if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
                             registerReceiver(mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-
+                            int memoriaActual = getMemoriaActual();
+                            if(memoriaActual<=preferencia.getMemoria()){
+                                switch (preferencia.getCalidad()){
+                                    case "Alta":
+                                        Log.i("CALIDÁ","ALTA");
+                                        cameraConfig.getBuilder(getApplicationContext()).setCameraResolution(CameraResolution.HIGH_RESOLUTION);
+                                        break;
+                                    case "Media":
+                                        Log.i("CALIDÁ","MEDIA");
+                                        cameraConfig.getBuilder(getApplicationContext()).setCameraResolution(CameraResolution.MEDIUM_RESOLUTION);
+                                        break;
+                                    case "Baja":
+                                        Log.i("CALIDÁ","BAJA");
+                                        cameraConfig.getBuilder(getApplicationContext()).setCameraResolution(CameraResolution.LOW_RESOLUTION);
+                                        break;
+                                    default:
+                                        cameraConfig.getBuilder(getApplicationContext()).setCameraResolution(CameraResolution.HIGH_RESOLUTION);
+                                        break;
+                                }
+                            }
                             startCamera(cameraConfig);
 
                             try {
@@ -128,7 +170,7 @@ public class DemoCamService extends HiddenCameraService {
 
                                 handler.postDelayed(this, 5000);//4 Segundos
                             }
-
+                            checkInternet(getApplicationContext());
                         } else
                             Log.i(TAG, "No tiene permiso");
 
@@ -252,10 +294,31 @@ public class DemoCamService extends HiddenCameraService {
         try {
             if (mBatInfoReceiver != null)
                 unregisterReceiver(mBatInfoReceiver);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
-        super.onDestroy();
+
+         super.onDestroy();
 
     }
+
+    public boolean checkInternet(Context ctx) {
+        boolean bandera = true;
+        ConnectivityManager conMgr = (ConnectivityManager) ctx.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo i = conMgr.getActiveNetworkInfo();
+        if (i == null || !i.isConnected() || !i.isAvailable()) {
+            bandera = false;
+            Log.i(TAG, "no internet");
+        }
+        else{
+            Log.i(TAG, "si internet");
+        }
+
+        return bandera;
+
+    }
+
+
 }
