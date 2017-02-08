@@ -20,14 +20,8 @@ import android.Manifest;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.database.SQLException;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -35,25 +29,20 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.karumi.dexter.Dexter;
-import com.karumi.dexter.DexterBuilder;
 import com.karumi.dexter.PermissionToken;
 import com.karumi.dexter.listener.PermissionDeniedResponse;
 import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
-import com.karumi.dexter.listener.single.DialogOnDeniedPermissionListener;
 import com.karumi.dexter.listener.single.PermissionListener;
 
-import java.util.List;
-
 import salesianostriana.timelapse.DemoCamService;
-import salesianostriana.timelapse.FotosDB;
-import salesianostriana.timelapse.Pojos.Foto;
+import salesianostriana.timelapse.FotosDatabase;
 import salesianostriana.timelapse.R;
 
 public class MainActivity extends AppCompatActivity {
 
     TextView estadoServicio;
-    FotosDB fotosDB;
+    FotosDatabase fotosDB;
     String TAG = "Fotos";
 
 
@@ -97,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         /*BASE DE DATOS LOCAL*/
-        fotosDB = new FotosDB(this);//Inicializa base de datos
+        fotosDB = new FotosDatabase(this);//Inicializa base de datos
 
         /*insertFoto(new Foto("probando.png", 12344L, 60.0, 1));
         insertFoto(new Foto("probando2.png", 23452345L, 40.0, 0));

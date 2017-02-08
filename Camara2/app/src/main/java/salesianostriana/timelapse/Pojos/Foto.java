@@ -6,8 +6,8 @@ package salesianostriana.timelapse.Pojos;
 
 public class Foto {
     Long id;
-    String path;
-    Long fecha;
+    String nombre;
+    Long fechaMilisegundos;
     Double bateria;
     int subida;
 
@@ -15,17 +15,17 @@ public class Foto {
     public Foto() {
     }
 
-    public Foto(String path, Long fecha, Double bateria, int subida) {
-        this.path = path;
-        this.fecha = fecha;
+    public Foto(String nombre, Long fechaMilisegundos, Double bateria, int subida) {
+        this.nombre = nombre;
+        this.fechaMilisegundos = fechaMilisegundos;
         this.bateria = bateria;
         this.subida = subida;
     }
 
-    public Foto(Long id, String path, Long fecha, Double bateria, int subida) {
+    public Foto(Long id, String nombre, Long fechaMilisegundos, Double bateria, int subida) {
         this.id = id;
-        this.path = path;
-        this.fecha = fecha;
+        this.nombre = nombre;
+        this.fechaMilisegundos = fechaMilisegundos;
         this.bateria = bateria;
         this.subida = subida;
     }
@@ -39,20 +39,20 @@ public class Foto {
         this.id = id;
     }
 
-    public String getPath() {
-        return path;
+    public String getNombre() {
+        return nombre;
     }
 
-    public void setPath(String path) {
-        this.path = path;
+    public void setNombre(String path) {
+        this.nombre = path;
     }
 
-    public Long getFecha() {
-        return fecha;
+    public Long getFechaMilisegundos() {
+        return fechaMilisegundos;
     }
 
-    public void setFecha(Long fecha) {
-        this.fecha = fecha;
+    public void setFechaMilisegundos(Long fechaMilisegundos) {
+        this.fechaMilisegundos = fechaMilisegundos;
     }
 
     public Double getBateria() {
@@ -77,8 +77,8 @@ public class Foto {
     public String toString() {
         return "Foto{" +
                 "id=" + id +
-                ", path='" + path + '\'' +
-                ", fecha=" + fecha +
+                ", nombre='" + nombre + '\'' +
+                ", fechaMilisegundos=" + fechaMilisegundos +
                 ", bateria=" + bateria +
                 ", subida=" + subida +
                 '}';

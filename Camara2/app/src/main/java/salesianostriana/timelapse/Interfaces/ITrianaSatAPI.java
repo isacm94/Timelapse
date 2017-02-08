@@ -21,9 +21,9 @@ import salesianostriana.timelapse.Pojos.hrefAPI.ListProyectos;
 
 public interface ITrianaSatAPI {
 
-    public static final String ENDPOINT = "http://172.27.0.136:8080/"; //TODO
-    public  static final String TOKEN = "asdfg435cdghs79846h741asdfg435cdg";
-    public static final String ENDPOINTPOST = "http://www.salesianos-triana.com/"; //TODO
+    String ENDPOINT_API = "http://172.27.0.136:8080/"; //TODO
+    String ENDPOINT_SALESIANOS = "http://www.salesianos-triana.com/"; //TODO
+    String TOKEN = "asdfg435cdghs79846h741asdfg435cdg";
 
 
     @GET("proyectos/search/findByToken")
