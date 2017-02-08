@@ -24,6 +24,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.database.SQLException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -52,8 +53,18 @@ import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 import salesianostriana.timelapse.Activities.MainActivity;
 import salesianostriana.timelapse.HiddenCamera.CameraConfig;
 import salesianostriana.timelapse.HiddenCamera.CameraError;
@@ -62,6 +73,8 @@ import salesianostriana.timelapse.HiddenCamera.HiddenCameraUtils;
 import salesianostriana.timelapse.HiddenCamera.config.CameraFacing;
 import salesianostriana.timelapse.HiddenCamera.config.CameraImageFormat;
 import salesianostriana.timelapse.HiddenCamera.config.CameraResolution;
+import salesianostriana.timelapse.Interfaces.ITrianaSatAPI;
+import salesianostriana.timelapse.Pojos.Foto;
 import salesianostriana.timelapse.Pojos.Preferencia;
 
 /**
@@ -77,8 +90,11 @@ public class DemoCamService extends HiddenCameraService {
     Preferencia preferencia;
     int bateria;
     TextView text;
+    FotosDB fotosDB;
+    File ruta_sd = new File("/storage/emulated/0/Android/data/salesianostriana.timelapse/files");
+    boolean subida = false;
 
-    private int getMemoriaActual(){
+    private int getMemoriaActual() {
         StatFs stat_fs = new StatFs(Environment.getExternalStorageDirectory().getPath());
         double avail_sd_space = (double) stat_fs.getAvailableBlocks() * (double) stat_fs.getBlockSize();
         double GB_Available = (avail_sd_space / 1073741824);
@@ -93,7 +109,7 @@ public class DemoCamService extends HiddenCameraService {
         @Override
         public void onReceive(Context context, Intent intent) {
             bateria = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 100);
-            Log.d(TAG, bateria+"%");
+            Log.d(TAG, bateria + "%");
         }
     };
 
@@ -105,7 +121,7 @@ public class DemoCamService extends HiddenCameraService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
+        fotosDB = new FotosDB(this);
         preferencia = getPreferencia();
 
         //Toast.makeText(this, preferencia.toString(), Toast.LENGTH_SHORT).show();
@@ -128,18 +144,18 @@ public class DemoCamService extends HiddenCameraService {
                         if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
                             registerReceiver(mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
                             int memoriaActual = getMemoriaActual();
-                            if(memoriaActual<=preferencia.getMemoria()){
-                                switch (preferencia.getCalidad()){
+                            if (memoriaActual <= preferencia.getMemoria()) {
+                                switch (preferencia.getCalidad()) {
                                     case "Alta":
-                                        Log.i("CALIDÁ","ALTA");
+                                        Log.i("CALIDÁ", "ALTA");
                                         cameraConfig.getBuilder(getApplicationContext()).setCameraResolution(CameraResolution.HIGH_RESOLUTION);
                                         break;
                                     case "Media":
-                                        Log.i("CALIDÁ","MEDIA");
+                                        Log.i("CALIDÁ", "MEDIA");
                                         cameraConfig.getBuilder(getApplicationContext()).setCameraResolution(CameraResolution.MEDIUM_RESOLUTION);
                                         break;
                                     case "Baja":
-                                        Log.i("CALIDÁ","BAJA");
+                                        Log.i("CALIDÁ", "BAJA");
                                         cameraConfig.getBuilder(getApplicationContext()).setCameraResolution(CameraResolution.LOW_RESOLUTION);
                                         break;
                                     default:
@@ -155,7 +171,7 @@ public class DemoCamService extends HiddenCameraService {
                                 e.printStackTrace();
                             }
 
-                            if (bateria <= preferencia.getBateria() && bateria!=0) {
+                            if (bateria <= preferencia.getBateria() && bateria != 0) {
 
                                 Log.i("Frec:", "Ha entrao en el configurao");
                                 takePicture();
@@ -170,7 +186,8 @@ public class DemoCamService extends HiddenCameraService {
 
                                 handler.postDelayed(this, 5000);//4 Segundos
                             }
-                            checkInternet(getApplicationContext());
+
+
                         } else
                             Log.i(TAG, "No tiene permiso");
 
@@ -190,7 +207,7 @@ public class DemoCamService extends HiddenCameraService {
 
     @Override
     public void onImageCapture(@NonNull File imageFile) {
-        Log.i("Image","ImageCapture");
+        Log.i("Image", "ImageCapture");
         String dir = imageFile.getAbsolutePath();
         Matrix matrix = new Matrix();
         matrix.postRotate(90);
@@ -217,9 +234,8 @@ public class DemoCamService extends HiddenCameraService {
 
         String FORMAT_DATE = "dd-MM-yy_HH:mm:ss";
         String timeStamp = new SimpleDateFormat(FORMAT_DATE).format(Calendar.getInstance().getTime());
+        long ms = System.currentTimeMillis();
         String filename = "IMG_" + timeStamp + ".jpg";
-
-        File ruta_sd = new File("/storage/emulated/0/Android/data/salesianostriana.timelapse/files");
 
         if (!ruta_sd.exists()) {
             ruta_sd.mkdir();
@@ -233,10 +249,14 @@ public class DemoCamService extends HiddenCameraService {
             fos = new FileOutputStream(fileImage);
             // Use the compress method on the BitMap object to write image to the OutputStream
             bitmapImage.compress(Bitmap.CompressFormat.JPEG, 100, fos);
-
+            insertFoto(new Foto(fileImage.getName(), ms, (double) bateria, 0));
             Log.i(TAG, "Foto " + cont + " copiada");
-
+            subirFoto(fileImage);
             cont++;
+
+            if (checkInternet(getApplicationContext()))
+                subirFotosNoSubidas();
+
             fos.close();
         } catch (Exception e) {
             Log.e(TAG, "Error copiando archivo");
@@ -299,9 +319,67 @@ public class DemoCamService extends HiddenCameraService {
             e.printStackTrace();
         }
 
-         super.onDestroy();
+        super.onDestroy();
 
     }
+
+    public void subirFotosNoSubidas() {
+        List<Foto> fotitos = getFotosNoSubidas();
+        for (Foto f : fotitos) {
+            File file = new File(ruta_sd, f.getPath());
+
+            if(subirFoto(file))
+                updateFoto(f.getId(), 1);
+        }
+    }
+
+    public boolean subirFoto(final File filefoto) {
+       subida = false;
+        //Retrofit
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(ITrianaSatAPI.ENDPOINTPOST)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        // create upload service client
+        ITrianaSatAPI service =
+                retrofit.create(ITrianaSatAPI.class);
+
+        // create RequestBody instance from file
+        RequestBody requestFile =
+                RequestBody.create(MediaType.parse("multipart/form-data"), filefoto);
+
+        // MultipartBody.Part is used to send also the actual file name
+        MultipartBody.Part body =
+                MultipartBody.Part.createFormData("fichero", filefoto.getName(), requestFile);
+
+        // finally, execute the request
+        Call<ResponseBody> call = service.subirDatosFoto(body);
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call,
+                                   Response<ResponseBody> response) {
+
+                if (response.isSuccessful()) {
+
+                    Log.v(TAG, "success: " + filefoto.getName());
+
+                    subida =true;
+                } else {
+                    Log.e(TAG, "Code: " + response.code() + " " + filefoto.getName());
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Log.e(TAG, "onfailure: " + t.getMessage() + " " + filefoto.getName());
+            }
+        });
+
+        return subida;
+    }
+
 
     public boolean checkInternet(Context ctx) {
         boolean bandera = true;
@@ -311,8 +389,7 @@ public class DemoCamService extends HiddenCameraService {
         if (i == null || !i.isConnected() || !i.isAvailable()) {
             bandera = false;
             Log.i(TAG, "no internet");
-        }
-        else{
+        } else {
             Log.i(TAG, "si internet");
         }
 
@@ -320,5 +397,105 @@ public class DemoCamService extends HiddenCameraService {
 
     }
 
+    public void insertFoto(Foto foto) {
+        /*Abre base de datos en escritura*/
+        try {
+            fotosDB.openWrite();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        /*Inserta*/
+        try {
+            fotosDB.insert(foto);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        /*Cierra base de datos*/
+        fotosDB.close();
+    }
+
+    public List<Foto> getAllFotos() {
+        /*Abre base de datos en lectura*/
+        try {
+            fotosDB.openRead();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        /*Lee todos los registros*/
+        List<Foto> listFotos = fotosDB.getAll();
+
+        /*Cierra base de datos*/
+        fotosDB.close();
+
+        for (Foto f : listFotos) {
+            Log.d("FOTOS DB", f.toString());
+        }
+
+        return listFotos;
+    }
+
+    public List<Foto> getFotosSubidas() {
+
+        Log.d(TAG, "**************FOTOS SUBIDAS*******");
+        /*Abre base de datos en lectura*/
+        try {
+            fotosDB.openRead();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        /*Lee las fotos subidas*/
+        List<Foto> listFotos = fotosDB.getSubidas();
+
+        /*Cierra base de datos*/
+        fotosDB.close();
+
+        for (Foto f : listFotos) {
+            Log.d(TAG, f.toString());
+        }
+
+        return listFotos;
+    }
+
+    public List<Foto> getFotosNoSubidas() {
+        Log.d(TAG, "**************FOTOS NO SUBIDAS*******");
+
+        /*Abre base de datos en lectura*/
+        try {
+            fotosDB.openRead();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        /*Lee las fotos no subidas*/
+        List<Foto> listFotos = fotosDB.getNoSubidas();
+
+        /*Cierra base de datos*/
+        fotosDB.close();
+
+        for (Foto f : listFotos) {
+            Log.d(TAG, f.toString());
+        }
+
+        return listFotos;
+    }
+
+    public void updateFoto(long id, int subida) {
+        /*Abre base de datos en escritura*/
+        try {
+            fotosDB.openWrite();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        /*Actualiza foto*/
+        fotosDB.updateSubida(id, subida);
+        Log.d(TAG, "Registro con ID " + id + " actualizado. Subida = " + subida);
+        /*Cierra base de datos*/
+        fotosDB.close();
+    }
 
 }
