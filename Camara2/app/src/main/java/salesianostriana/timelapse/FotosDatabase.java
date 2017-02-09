@@ -132,7 +132,7 @@ public class FotosDatabase {
 
         List<Foto> listFotos = new ArrayList<>();
 
-        Cursor cursor = this.myBD.rawQuery("SELECT * FROM " + DATABASE_TABLE, null);
+        Cursor cursor = this.myBD.rawQuery("SELECT * FROM " + DATABASE_TABLE + " ORDER BY subida", null);
 
         if (cursor.moveToFirst()) {
             //Recorremos el cursor hasta que no haya más registros
