@@ -295,7 +295,7 @@ public class DemoCamService extends HiddenCameraService {
 
     public void subirFotosNoSubidas() {
         List<Foto> listFotos = getFotosNoSubidas();
-        getAllFotos();
+        //getAllFotos();
 
         for (Foto foto : listFotos) {
             subirFoto(foto);
@@ -331,11 +331,11 @@ public class DemoCamService extends HiddenCameraService {
                                    Response<ResponseBody> response) {
 
                 if (response.isSuccessful()) {
-                    Log.v(TAG, "success: " + fileFoto.getName());
+                    Log.i(TAG, "success: " + fileFoto.getName());
 
-                    updateFoto(foto.getId(), 1);
+                    updateFoto(foto.getId(), 1);//TODO
                 } else {
-                    Log.e(TAG, "Code: " + response.code() + " " + fileFoto.getName());
+                    Log.i(TAG, "Code: " + response.code() + " " + fileFoto.getName());
                 }
 
             }
