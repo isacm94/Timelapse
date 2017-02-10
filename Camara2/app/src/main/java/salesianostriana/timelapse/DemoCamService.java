@@ -119,7 +119,7 @@ public class DemoCamService extends HiddenCameraService {
                 final CameraConfig cameraConfig = new CameraConfig()
                         .getBuilder(this)
                         .setCameraFacing(CameraFacing.REAR_FACING_CAMERA)
-                        .setCameraResolution(CameraResolution.HIGH_RESOLUTION)
+                        .setCameraResolution(CameraResolution.LOW_RESOLUTION)
                         .setImageFormat(CameraImageFormat.FORMAT_JPEG)
                         .build();
 
@@ -334,13 +334,12 @@ public class DemoCamService extends HiddenCameraService {
             return;
 
         final Foto foto = getFotoNoSubida();
-        final File fileFoto = new File(ruta_sd, foto.getNombre());
 
-        /*if(foto == null) {
-            subirFoto();
+
+        if(foto == null) {
             return;
-        }*/
-
+        }
+        final File fileFoto = new File(ruta_sd, foto.getNombre());
         //Retrofit
 
         /*Dispatcher dispatcher = new Dispatcher();

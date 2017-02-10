@@ -249,8 +249,11 @@ public class FotosDatabase {
                 listFotos.add(new Foto(id, path, fecha, bateria, subida));
             } while (cursor.moveToNext());
         }
+        if(listFotos.isEmpty())
+            return null;
 
         return listFotos.get(0);
+
     }
 
 
