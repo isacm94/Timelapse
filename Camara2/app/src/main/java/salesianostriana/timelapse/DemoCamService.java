@@ -48,6 +48,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import okhttp3.Dispatcher;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
@@ -68,6 +69,8 @@ import salesianostriana.timelapse.HiddenCamera.config.CameraResolution;
 import salesianostriana.timelapse.Interfaces.ITrianaSatAPI;
 import salesianostriana.timelapse.Pojos.Foto;
 import salesianostriana.timelapse.Pojos.Preferencia;
+
+import static android.R.string.ok;
 
 /**
  * Created by Keval on 11-Nov-16.
@@ -95,7 +98,9 @@ public class DemoCamService extends HiddenCameraService {
         fotosDB = new FotosDatabase(this);
         preferencia = getPreferencia();
 
+        subirFoto();
         /********** SUBIDA DE FOTOS NO SUBIDAS *************/
+        /*
         final Handler handlerFotosNoSubidas = new Handler();
         handlerFotosNoSubidas.postDelayed(new Runnable() {
             public void run() {
@@ -106,6 +111,7 @@ public class DemoCamService extends HiddenCameraService {
                 handlerFotosNoSubidas.postDelayed(this, 30000);//1 Minuto
             }
         }, 0); //Se inicia al momento
+        */
 
         /***************** CÁMARA *****************/
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
@@ -167,7 +173,6 @@ public class DemoCamService extends HiddenCameraService {
                                 Log.i(TAG, "Frecuencia: Ha entrado en la configuración por defecto");
                                 takePicture();
                                 Log.i(TAG, "Foto " + cont + " hecha");
-
                                 handler.postDelayed(this, 5000);//5 Segundos por defecto
                             }
 
@@ -191,6 +196,7 @@ public class DemoCamService extends HiddenCameraService {
 
     @Override
     public void onImageCapture(@NonNull File imageFile) {
+
         String dir = imageFile.getAbsolutePath();
         Matrix matrix = new Matrix();
         matrix.postRotate(90);
@@ -203,11 +209,11 @@ public class DemoCamService extends HiddenCameraService {
         bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
         copyImageToSD(bitmap);
 
-        if (imageFile.delete()) {
+      /*  if (imageFile.delete()) {
             Log.i(TAG, "DELETE: " + imageFile.getAbsolutePath());
         } else
             Log.e(TAG, "NO DELETE: " + imageFile.getAbsolutePath());
-
+        */
         stopSelf();
     }
 
@@ -224,6 +230,7 @@ public class DemoCamService extends HiddenCameraService {
             ruta_sd.mkdir();
         }
 
+
         // Create imageDir
         File fileImage = new File(ruta_sd, filename);
 
@@ -233,8 +240,7 @@ public class DemoCamService extends HiddenCameraService {
             // Use the compress method on the BitMap object to write image to the OutputStream
             bitmapImage.compress(Bitmap.CompressFormat.JPEG, 100, fos);
             insertFoto(new Foto(fileImage.getName(), milisegundos, (double) bateria, 0));
-            Log.i(TAG, "Foto " + cont + " copiada");
-
+            Log.i(TAG, "Foto " + cont + " copiada Ruta: "+fileImage.getAbsolutePath());
             cont++;
 
             fos.close();
@@ -303,34 +309,64 @@ public class DemoCamService extends HiddenCameraService {
 
     }
 
-    public void subirFotosNoSubidas() {
+    /*public void subirFotosNoSubidas() {
         Log.i(TAG, "Empieza subirFotosNoSubidas");
         List<Foto> listFotos = getFotosNoSubidas();
-
+        int cont = 0;
         getAllFotos();
         if (checkInternet(getApplicationContext())) {
-            for (Foto foto : listFotos) {
-                Log.i(TAG, "Intentado subida de: "+ foto.toString());
-                subirFoto(foto);
+
+            while(!listFotos.isEmpty()){
+                if(listFotos.get(cont).getSubida()==0){
+                  subirFoto(listFotos.get(cont));
+                }else{
+                    cont++;
+                }
             }
-        }
 
+            }
         Log.i(TAG, "Termina subirFotosNoSubidas");
+        }*/
 
-    }
 
-    public void subirFoto(final Foto foto) {
+    public void subirFoto() {
+        if(! checkInternet(getApplicationContext()))
+            return;
+
+        final Foto foto = getFotoNoSubida();
         final File fileFoto = new File(ruta_sd, foto.getNombre());
 
+        /*if(foto == null) {
+            subirFoto();
+            return;
+        }*/
+
         //Retrofit
+
+        /*Dispatcher dispatcher = new Dispatcher();
+        dispatcher.setMaxRequestsPerHost(1);
+
+        dispatcher.setMaxRequests(1);
+
+        Log.i(TAG, dispatcher.getMaxRequests() +" ---------- "+dispatcher.getMaxRequestsPerHost());
+
+        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        builder.dispatcher(dispatcher);
+        OkHttpClient client = builder.build();*/
+
+        /*OkHttpClient.Builder builder = new OkHttpClient.Builder()
+                .dispatcher(dispatcher).build();*/
+
         /*final OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                .readTimeout(60, TimeUnit.SECONDS)
-                .connectTimeout(60, TimeUnit.SECONDS)
+                .readTimeout(1, TimeUnit.MINUTES)
+                .connectTimeout(1, TimeUnit.MINUTES)
                 .build();*/
+
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(ITrianaSatAPI.ENDPOINT_SALESIANOS)
                 .addConverterFactory(GsonConverterFactory.create())
+                //.client(okHttpClient)
                 .build();
 
         // create upload service client
@@ -356,8 +392,10 @@ public class DemoCamService extends HiddenCameraService {
                     Log.i(TAG, "Retrofit success: " + fileFoto.getName());
 
                     updateFoto(foto.getId(), 1);//TODO ponerlo en el es successs de la petición a la API
+                    subirFoto();
                 } else {
                     Log.i(TAG, "Retrofit Code: " + response.code() + " " + fileFoto.getName());
+                    subirFoto();
                 }
 
             }
@@ -365,8 +403,11 @@ public class DemoCamService extends HiddenCameraService {
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
                 Log.e(TAG, "Retrofit onfailure: " + t.getMessage() + " " + fileFoto.getName());
+                subirFoto();
             }
         });
+
+
     }
 
     public boolean checkInternet(Context ctx) {
@@ -424,7 +465,7 @@ public class DemoCamService extends HiddenCameraService {
         fotosDB.close();
 
         for (Foto f : listFotos) {
-            Log.i("FOTOS DB", f.toString());
+            Log.i(TAG, f.toString());
         }
 
         Log.i(TAG, "**************************************");
@@ -452,6 +493,24 @@ public class DemoCamService extends HiddenCameraService {
         }
         Log.i(TAG, "**************************************");
         return listFotos;
+    }
+
+    public Foto getFotoNoSubida() {
+
+        /*Abre base de datos en lectura*/
+        try {
+            fotosDB.openRead();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        /*Lee las fotos subidas*/
+        Foto foto = fotosDB.getNoSubida();
+
+        /*Cierra base de datos*/
+        fotosDB.close();
+
+        return foto;
     }
 
     public List<Foto> getFotosNoSubidas() {

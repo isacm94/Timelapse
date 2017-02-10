@@ -231,6 +231,28 @@ public class FotosDatabase {
 
         return listFotos;
     }
+    public Foto getNoSubida() throws SQLException {
+
+        List<Foto> listFotos = new ArrayList<>();
+
+        Cursor cursor = this.myBD.rawQuery("SELECT * FROM " + DATABASE_TABLE + " WHERE subida = 0 LIMIT 1", null);
+
+        if (cursor.moveToFirst()) {
+            //Recorremos el cursor hasta que no haya más registros
+            do {
+                Long id = cursor.getLong(cursor.getColumnIndexOrThrow(ID));
+                String path = cursor.getString(cursor.getColumnIndexOrThrow(NOMBRE));
+                Long fecha = cursor.getLong(cursor.getColumnIndexOrThrow(FECHA_MILISEGUNDOS));
+                Double bateria = cursor.getDouble(cursor.getColumnIndexOrThrow(BATERIA));
+                int subida = cursor.getInt(cursor.getColumnIndexOrThrow(SUBIDA));
+
+                listFotos.add(new Foto(id, path, fecha, bateria, subida));
+            } while (cursor.moveToNext());
+        }
+
+        return listFotos.get(0);
+    }
+
 
 
     /**
