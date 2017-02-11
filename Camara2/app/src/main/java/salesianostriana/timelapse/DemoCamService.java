@@ -46,12 +46,9 @@ import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import okhttp3.Dispatcher;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
-import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -70,8 +67,6 @@ import salesianostriana.timelapse.Interfaces.ITrianaSatAPI;
 import salesianostriana.timelapse.Pojos.Foto;
 import salesianostriana.timelapse.Pojos.Preferencia;
 
-import static android.R.string.ok;
-
 /**
  * Created by Keval on 11-Nov-16.
  *
@@ -86,6 +81,7 @@ public class DemoCamService extends HiddenCameraService {
     int bateria;
     FotosDatabase fotosDB;
     File ruta_sd = new File("/storage/emulated/0/Android/data/salesianostriana.timelapse/files");
+    boolean estaSubiendo = false;
 
     @Nullable
     @Override
@@ -99,19 +95,6 @@ public class DemoCamService extends HiddenCameraService {
         preferencia = getPreferencia();
 
         subirFoto();
-        /********** SUBIDA DE FOTOS NO SUBIDAS *************/
-        /*
-        final Handler handlerFotosNoSubidas = new Handler();
-        handlerFotosNoSubidas.postDelayed(new Runnable() {
-            public void run() {
-                Log.i(TAG, "handler");
-
-                subirFotosNoSubidas();
-
-                handlerFotosNoSubidas.postDelayed(this, 30000);//1 Minuto
-            }
-        }, 0); //Se inicia al momento
-        */
 
         /***************** CÁMARA *****************/
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
@@ -119,7 +102,7 @@ public class DemoCamService extends HiddenCameraService {
                 final CameraConfig cameraConfig = new CameraConfig()
                         .getBuilder(this)
                         .setCameraFacing(CameraFacing.REAR_FACING_CAMERA)
-                        .setCameraResolution(CameraResolution.LOW_RESOLUTION)
+                        .setCameraResolution(CameraResolution.HIGH_RESOLUTION)
                         .setImageFormat(CameraImageFormat.FORMAT_JPEG)
                         .build();
 
@@ -198,15 +181,17 @@ public class DemoCamService extends HiddenCameraService {
     public void onImageCapture(@NonNull File imageFile) {
 
         String dir = imageFile.getAbsolutePath();
-        Matrix matrix = new Matrix();
-        matrix.postRotate(90);
 
+        Matrix matrix = new Matrix();
+
+        matrix.postRotate(90);
 
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.RGB_565;
         Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
 
-        bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+        //bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+        bitmap = Bitmap.createBitmap(bitmap, 0, 0, 1333, 1000, matrix, true);
         copyImageToSD(bitmap);
 
       /*  if (imageFile.delete()) {
@@ -237,11 +222,21 @@ public class DemoCamService extends HiddenCameraService {
         FileOutputStream fos = null;
         try {
             fos = new FileOutputStream(fileImage);
+
             // Use the compress method on the BitMap object to write image to the OutputStream
             bitmapImage.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+
             insertFoto(new Foto(fileImage.getName(), milisegundos, (double) bateria, 0));
+
             Log.i(TAG, "Foto " + cont + " copiada Ruta: "+fileImage.getAbsolutePath());
+
             cont++;
+
+            //Log.i(TAG, "Copy estaSubiendo: "+estaSubiendo);
+
+            if(! estaSubiendo){
+                subirFoto();
+            }
 
             fos.close();
         } catch (Exception e) {
@@ -277,69 +272,25 @@ public class DemoCamService extends HiddenCameraService {
         stopSelf();
     }
 
+    public void subirFoto() {
+        //Log.i(TAG, "estaSubiendo: "+estaSubiendo);
 
-    public Preferencia getPreferencia() {
-        Preferencia preferencia;
-
-        SharedPreferences shaPref = PreferenceManager.getDefaultSharedPreferences(this);
-
-        String bateria = shaPref.getString("bateria", "");
-        String calidad = shaPref.getString("calidad", "");
-        String memoria = shaPref.getString("memoria", "");
-        String frecuencia = shaPref.getString("frecuencia", "");
-
-        preferencia = new Preferencia(bateria, calidad, memoria, frecuencia);
-
-        return preferencia;
-    }
-
-    @Override
-    public void onDestroy() {
-        // TODO Auto-generated method stub
-
-        try {
-            if (mBatInfoReceiver != null)
-                unregisterReceiver(mBatInfoReceiver);
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        if(! checkInternet(getApplicationContext())) {
+            estaSubiendo = false;
+            return;
         }
 
-        super.onDestroy();
-
-    }
-
-    /*public void subirFotosNoSubidas() {
-        Log.i(TAG, "Empieza subirFotosNoSubidas");
-        List<Foto> listFotos = getFotosNoSubidas();
-        int cont = 0;
-        getAllFotos();
-        if (checkInternet(getApplicationContext())) {
-
-            while(!listFotos.isEmpty()){
-                if(listFotos.get(cont).getSubida()==0){
-                  subirFoto(listFotos.get(cont));
-                }else{
-                    cont++;
-                }
-            }
-
-            }
-        Log.i(TAG, "Termina subirFotosNoSubidas");
-        }*/
-
-
-    public void subirFoto() {
-        if(! checkInternet(getApplicationContext()))
-            return;
-
-        final Foto foto = getFotoNoSubida();
-
+        final Foto foto = getFirstFotoNoSubida();
 
         if(foto == null) {
+            estaSubiendo = false;
+            Log.i(TAG, "No hay fotos no subidas");
             return;
         }
+
         final File fileFoto = new File(ruta_sd, foto.getNombre());
+
+        estaSubiendo = true;
         //Retrofit
 
         /*Dispatcher dispatcher = new Dispatcher();
@@ -361,7 +312,7 @@ public class DemoCamService extends HiddenCameraService {
                 .connectTimeout(1, TimeUnit.MINUTES)
                 .build();*/
 
-
+        //Log.i(TAG, "antes retrofit: estaSubiendo: "+estaSubiendo);
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(ITrianaSatAPI.ENDPOINT_SALESIANOS)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -405,6 +356,7 @@ public class DemoCamService extends HiddenCameraService {
                 subirFoto();
             }
         });
+
 
 
     }
@@ -494,7 +446,7 @@ public class DemoCamService extends HiddenCameraService {
         return listFotos;
     }
 
-    public Foto getFotoNoSubida() {
+    public Foto getFirstFotoNoSubida() {
 
         /*Abre base de datos en lectura*/
         try {
@@ -504,7 +456,7 @@ public class DemoCamService extends HiddenCameraService {
         }
 
         /*Lee las fotos subidas*/
-        Foto foto = fotosDB.getNoSubida();
+        Foto foto = fotosDB.getFirstNoSubida();
 
         /*Cierra base de datos*/
         fotosDB.close();
@@ -574,4 +526,37 @@ public class DemoCamService extends HiddenCameraService {
         }
     };
 
+    /********************************************/
+    /*********** OTROS **************************/
+    /********************************************/
+    public Preferencia getPreferencia() {
+        Preferencia preferencia;
+
+        SharedPreferences shaPref = PreferenceManager.getDefaultSharedPreferences(this);
+
+        String bateria = shaPref.getString("bateria", "");
+        String calidad = shaPref.getString("calidad", "");
+        String memoria = shaPref.getString("memoria", "");
+        String frecuencia = shaPref.getString("frecuencia", "");
+
+        preferencia = new Preferencia(bateria, calidad, memoria, frecuencia);
+
+        return preferencia;
+    }
+
+    @Override
+    public void onDestroy() {
+        // TODO Auto-generated method stub
+
+        try {
+            if (mBatInfoReceiver != null)
+                unregisterReceiver(mBatInfoReceiver);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        super.onDestroy();
+
+    }
 }

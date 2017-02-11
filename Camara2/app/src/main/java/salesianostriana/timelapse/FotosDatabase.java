@@ -231,7 +231,7 @@ public class FotosDatabase {
 
         return listFotos;
     }
-    public Foto getNoSubida() throws SQLException {
+    public Foto getFirstNoSubida() throws SQLException {
 
         List<Foto> listFotos = new ArrayList<>();
 
