@@ -4,7 +4,7 @@ package salesianostriana.timelapse.Pojos.hrefAPI;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class ListaDatosSensores {
+public class DatosSensores {
 
     @SerializedName("href")
     @Expose

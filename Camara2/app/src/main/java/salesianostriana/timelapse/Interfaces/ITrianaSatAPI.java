@@ -1,18 +1,16 @@
 package salesianostriana.timelapse.Interfaces;
 
-import java.io.File;
-
 import okhttp3.MultipartBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
+import retrofit2.http.Headers;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
-import retrofit2.http.PUT;
 import retrofit2.http.Part;
 import retrofit2.http.Query;
-import salesianostriana.timelapse.Pojos.Foto;
+import salesianostriana.timelapse.Pojos.API.FotoInfo;
 import salesianostriana.timelapse.Pojos.hrefAPI.ListProyectos;
 
 /**
@@ -21,22 +19,18 @@ import salesianostriana.timelapse.Pojos.hrefAPI.ListProyectos;
 
 public interface ITrianaSatAPI {
 
-    String ENDPOINT_API = "http://trianasat2-salesianostriana.rhcloud.com/"; //TODO
-    String ENDPOINT_SALESIANOS = "http://www.salesianos-triana.com/"; //TODO
-    String TOKEN = "asdfg435cdghs79846h741asdfg435cdg";
-//http://trianasat2-salesianostriana.rhcloud.com/proyectos/1
+    String ENDPOINT_API = "http://trianasat2-salesianostriana.rhcloud.com/";
+    String ENDPOINT_SALESIANOS = "http://www.salesianos-triana.com/";
 
     @GET("proyectos/search/findByToken")
     Call<ListProyectos> obtenerProyecto(@Query("token") String token);
 
     @POST("dam/trianasat/")
     @Multipart
-    Call<ResponseBody> subirDatosFoto(@Part MultipartBody.Part file);
+    Call<ResponseBody> subirFoto(@Part MultipartBody.Part file);
 
-
-
-    //@POST("gps")
-    //Call<Gps> upload(@Body Gps datos);
-
+    @Headers("Accept: application/json")
+    @POST("timelapse")
+    Call<ResponseBody> subirFotoInfo(@Body FotoInfo fotoInfo);
 
 }

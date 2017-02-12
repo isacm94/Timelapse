@@ -20,8 +20,10 @@ import android.Manifest;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -35,14 +37,20 @@ import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.single.PermissionListener;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 import salesianostriana.timelapse.DemoCamService;
-import salesianostriana.timelapse.FotosDatabase;
+import salesianostriana.timelapse.Interfaces.ITrianaSatAPI;
+import salesianostriana.timelapse.Pojos.PreferenciaAPI;
+import salesianostriana.timelapse.Pojos.hrefAPI.ListProyectos;
 import salesianostriana.timelapse.R;
 
 public class MainActivity extends AppCompatActivity {
 
     TextView estadoServicio;
-    FotosDatabase fotosDB;
     String TAG = "Fotos";
 
 
@@ -51,12 +59,27 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        /******* PREFERENCIAS API ***********/
+        String TOKEN = "asdfg435cdghs79846h741asdfg435cdg";
+
+        setTokenPreferenciaAPI(TOKEN);
+
+        if (getPreferenciaAPI().getUrl().isEmpty()) {
+            getUrlAPI();
+        }
+
+        /************ PERMISOS **************/
         Dexter.withActivity(this)
                 .withPermission(Manifest.permission.CAMERA)
                 .withListener(new PermissionListener() {
-                    @Override public void onPermissionGranted(PermissionGrantedResponse response) {/* ... */}
-                    @Override public void onPermissionDenied(PermissionDeniedResponse response) {/* ... */}
-                    @Override public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {/* ... */}
+                    @Override
+                    public void onPermissionGranted(PermissionGrantedResponse response) {/* ... */}
+
+                    @Override
+                    public void onPermissionDenied(PermissionDeniedResponse response) {/* ... */}
+
+                    @Override
+                    public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {/* ... */}
                 }).check();
 
 
@@ -65,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
         estadoServicio.setText("Servicio No Activo");
         estadoServicio.setTextColor(getResources().getColor(android.R.color.holo_red_light));
 
-        //CLICK boton lanzar servricio
+        /********** CLICK boton lanzar servicio ***************/
         findViewById(R.id.btn_using_service).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -82,28 +105,86 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
-
-
-        /*BASE DE DATOS LOCAL*/
-        fotosDB = new FotosDatabase(this);//Inicializa base de datos
-
-        /*insertFoto(new Foto("probando.png", 12344L, 60.0, 1));
-        insertFoto(new Foto("probando2.png", 23452345L, 40.0, 0));
-        insertFoto(new Foto("probando3.png", 3452345L, 30.0, 1));
-        insertFoto(new Foto("probando4.png", 244352L, 20.0, 0));
-        insertFoto(new Foto("probando5.png", 345L, 40.0, 1));
-
-        List<Foto> fotosSubidas = getFotosSubidas();
-        List<Foto> fotosNoSubidas = getFotosNoSubidas();
-
-        updateFoto(fotosNoSubidas.get(1).getId(), 1);
-
-        getFotosSubidas();
-        getFotosNoSubidas();*/
-
     }
 
+    /*Consulta con retrofit para conseguir la URL de la API del proyecto donde hay subir las información de la foto*/
+    public void getUrlAPI() {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(ITrianaSatAPI.ENDPOINT_API)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        ITrianaSatAPI service =
+                retrofit.create(ITrianaSatAPI.class);
+
+        Call<ListProyectos> call = service.obtenerProyecto(getPreferenciaAPI().getToken());
+        call.enqueue(new Callback<ListProyectos>() {
+            @Override
+            public void onResponse(Call<ListProyectos> call,
+                                   Response<ListProyectos> response) {
+
+                if (response.isSuccessful()) {
+                    String href = response.body().getEmbedded().getProyectos().get(0).getLinks().getSelf().getHref();
+
+                    setURLPreferenciaAPI(href);
+                } else {
+                    Log.i(TAG, "Error Code: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ListProyectos> call, Throwable t) {
+                Log.e(TAG, "Error onfailure: " + t.getMessage());
+            }
+        });
+    }
+
+    /*Consulta el token y la url del proyecto de la API en preferencias*/
+    public PreferenciaAPI getPreferenciaAPI() {
+        PreferenciaAPI preferencia;
+
+        SharedPreferences prefs =
+                getSharedPreferences("PreferenciasAPI", Context.MODE_PRIVATE);
+
+        String token = prefs.getString("token", "");
+        String url = prefs.getString("url", "");
+
+        preferencia = new PreferenciaAPI(token, url);
+
+        return preferencia;
+    }
+
+    /**
+     * Guarda la url del proyecto de la API en preferencias
+     *
+     * @param url
+     */
+    public void setURLPreferenciaAPI(String url) {
+        SharedPreferences prefs =
+                getSharedPreferences("PreferenciasAPI", Context.MODE_PRIVATE);
+
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("url", url);
+        editor.commit();
+    }
+
+    /**
+     * Guarda el token del proyecto de la API en preferencias
+     *
+     * @param token
+     */
+    public void setTokenPreferenciaAPI(String token) {
+        SharedPreferences prefs =
+                getSharedPreferences("PreferenciasAPI", Context.MODE_PRIVATE);
+
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("token", token);
+        editor.commit();
+    }
+
+    /************************************/
+    /************* MENÚ *****************/
+    /************************************/
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
@@ -138,8 +219,6 @@ public class MainActivity extends AppCompatActivity {
         }
         return false;
     }
-
-
 
 
 }

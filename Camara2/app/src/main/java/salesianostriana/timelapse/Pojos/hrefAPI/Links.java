@@ -12,15 +12,15 @@ public class Links {
     @SerializedName("proyecto")
     @Expose
     private Proyecto_ proyecto;
-    @SerializedName("listaGps")
+    @SerializedName("datos_sensores")
     @Expose
-    private ListaGps listaGps;
-    @SerializedName("listaTimelapse")
+    private DatosSensores datosSensores;
+    @SerializedName("timelapse")
     @Expose
-    private ListaTimelapse listaTimelapse;
-    @SerializedName("listaDatosSensores")
+    private Timelapse timelapse;
+    @SerializedName("gps")
     @Expose
-    private ListaDatosSensores listaDatosSensores;
+    private Gps gps;
     @SerializedName("organizacion")
     @Expose
     private Organizacion organizacion;
@@ -41,28 +41,28 @@ public class Links {
         this.proyecto = proyecto;
     }
 
-    public ListaGps getListaGps() {
-        return listaGps;
+    public DatosSensores getDatosSensores() {
+        return datosSensores;
     }
 
-    public void setListaGps(ListaGps listaGps) {
-        this.listaGps = listaGps;
+    public void setDatosSensores(DatosSensores datosSensores) {
+        this.datosSensores = datosSensores;
     }
 
-    public ListaTimelapse getListaTimelapse() {
-        return listaTimelapse;
+    public Timelapse getTimelapse() {
+        return timelapse;
     }
 
-    public void setListaTimelapse(ListaTimelapse listaTimelapse) {
-        this.listaTimelapse = listaTimelapse;
+    public void setTimelapse(Timelapse timelapse) {
+        this.timelapse = timelapse;
     }
 
-    public ListaDatosSensores getListaDatosSensores() {
-        return listaDatosSensores;
+    public Gps getGps() {
+        return gps;
     }
 
-    public void setListaDatosSensores(ListaDatosSensores listaDatosSensores) {
-        this.listaDatosSensores = listaDatosSensores;
+    public void setGps(Gps gps) {
+        this.gps = gps;
     }
 
     public Organizacion getOrganizacion() {

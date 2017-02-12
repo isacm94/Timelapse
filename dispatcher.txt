@@ -1,0 +1,18 @@
+/*Dispatcher dispatcher = new Dispatcher();
+        dispatcher.setMaxRequestsPerHost(1);
+
+        dispatcher.setMaxRequests(1);
+
+        Log.i(TAG, dispatcher.getMaxRequests() +" ---------- "+dispatcher.getMaxRequestsPerHost());
+
+        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        builder.dispatcher(dispatcher);
+        OkHttpClient client = builder.build();*/
+
+        /*OkHttpClient.Builder builder = new OkHttpClient.Builder()
+                .dispatcher(dispatcher).build();*/
+
+        /*final OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .readTimeout(1, TimeUnit.MINUTES)
+                .connectTimeout(1, TimeUnit.MINUTES)
+                .build();*/

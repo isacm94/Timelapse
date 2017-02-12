@@ -64,8 +64,10 @@ import salesianostriana.timelapse.HiddenCamera.config.CameraFacing;
 import salesianostriana.timelapse.HiddenCamera.config.CameraImageFormat;
 import salesianostriana.timelapse.HiddenCamera.config.CameraResolution;
 import salesianostriana.timelapse.Interfaces.ITrianaSatAPI;
+import salesianostriana.timelapse.Pojos.API.FotoInfo;
 import salesianostriana.timelapse.Pojos.Foto;
 import salesianostriana.timelapse.Pojos.Preferencia;
+import salesianostriana.timelapse.Pojos.PreferenciaAPI;
 
 /**
  * Created by Keval on 11-Nov-16.
@@ -228,13 +230,13 @@ public class DemoCamService extends HiddenCameraService {
 
             insertFoto(new Foto(fileImage.getName(), milisegundos, (double) bateria, 0));
 
-            Log.i(TAG, "Foto " + cont + " copiada Ruta: "+fileImage.getAbsolutePath());
+            Log.i(TAG, "Foto " + cont + " copiada Ruta: " + fileImage.getAbsolutePath());
 
             cont++;
 
             //Log.i(TAG, "Copy estaSubiendo: "+estaSubiendo);
 
-            if(! estaSubiendo){
+            if (!estaSubiendo) {
                 subirFoto();
             }
 
@@ -275,14 +277,14 @@ public class DemoCamService extends HiddenCameraService {
     public void subirFoto() {
         //Log.i(TAG, "estaSubiendo: "+estaSubiendo);
 
-        if(! checkInternet(getApplicationContext())) {
+        if (!checkInternet(getApplicationContext())) {
             estaSubiendo = false;
             return;
         }
 
         final Foto foto = getFirstFotoNoSubida();
 
-        if(foto == null) {
+        if (foto == null) {
             estaSubiendo = false;
             Log.i(TAG, "No hay fotos no subidas");
             return;
@@ -293,30 +295,10 @@ public class DemoCamService extends HiddenCameraService {
         estaSubiendo = true;
         //Retrofit
 
-        /*Dispatcher dispatcher = new Dispatcher();
-        dispatcher.setMaxRequestsPerHost(1);
-
-        dispatcher.setMaxRequests(1);
-
-        Log.i(TAG, dispatcher.getMaxRequests() +" ---------- "+dispatcher.getMaxRequestsPerHost());
-
-        OkHttpClient.Builder builder = new OkHttpClient.Builder();
-        builder.dispatcher(dispatcher);
-        OkHttpClient client = builder.build();*/
-
-        /*OkHttpClient.Builder builder = new OkHttpClient.Builder()
-                .dispatcher(dispatcher).build();*/
-
-        /*final OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                .readTimeout(1, TimeUnit.MINUTES)
-                .connectTimeout(1, TimeUnit.MINUTES)
-                .build();*/
-
         //Log.i(TAG, "antes retrofit: estaSubiendo: "+estaSubiendo);
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(ITrianaSatAPI.ENDPOINT_SALESIANOS)
                 .addConverterFactory(GsonConverterFactory.create())
-                //.client(okHttpClient)
                 .build();
 
         // create upload service client
@@ -332,7 +314,7 @@ public class DemoCamService extends HiddenCameraService {
                 MultipartBody.Part.createFormData("fichero", fileFoto.getName(), requestFile);
 
         // finally, execute the request
-        Call<ResponseBody> call = service.subirDatosFoto(body);
+        Call<ResponseBody> call = service.subirFoto(body);
         call.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call,
@@ -341,11 +323,11 @@ public class DemoCamService extends HiddenCameraService {
                 if (response.isSuccessful()) {
                     Log.i(TAG, "Retrofit success: " + fileFoto.getName());
 
-                    updateFoto(foto.getId(), 1);//TODO ponerlo en el es successs de la petición a la API
-                    subirFoto();
+                    //updateFoto(foto.getId(), 1);//TODO ponerlo en el es successs de la petición a la API
+                    subirFotoInfo(foto);
                 } else {
-                    Log.i(TAG, "Retrofit Code: " + response.code() + " " + fileFoto.getName());
-                    subirFoto();
+                    Log.i(TAG, "Retrofit Error Code: " + response.code() + " " + fileFoto.getName());
+                    subirFotoInfo(foto);
                 }
 
             }
@@ -353,12 +335,47 @@ public class DemoCamService extends HiddenCameraService {
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
                 Log.e(TAG, "Retrofit onfailure: " + t.getMessage() + " " + fileFoto.getName());
-                subirFoto();
+                subirFotoInfo(foto);
             }
         });
 
+    }
 
+    public void subirFotoInfo(final Foto foto) {
+        String urlFoto = "http://www.salesianos-triana.com/dam/trianasat/files/" + foto.getNombre();//Construye URL foto
+        final FotoInfo fotoInfo = new FotoInfo(foto.getFechaMilisegundos(), urlFoto, foto.getBateria(), getPreferenciaAPI().getUrl());
 
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(ITrianaSatAPI.ENDPOINT_API)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        ITrianaSatAPI service =
+                retrofit.create(ITrianaSatAPI.class);
+
+        Call<ResponseBody> call = service.subirFotoInfo(fotoInfo);
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call,
+                                   Response<ResponseBody> response) {
+                Log.i(TAG, "URL POST: " + call.request().url());
+                if (response.isSuccessful()) {
+                    Log.i(TAG, "Retrofit InfoFoto success: " + foto.getNombre());
+
+                    updateFoto(foto.getId(), 1);
+                    subirFoto();
+                } else {
+                    Log.i(TAG, "Retrofit Error InfoFoto Code: " + response.code() + ", " + response.message() + ", " + foto.getNombre());
+                    subirFoto();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Log.e(TAG, "Retrofit InfoFoto onfailure: " + t.getMessage() + " " + foto.getNombre());
+                subirFoto();
+            }
+        });
     }
 
     public boolean checkInternet(Context ctx) {
@@ -540,6 +557,21 @@ public class DemoCamService extends HiddenCameraService {
         String frecuencia = shaPref.getString("frecuencia", "");
 
         preferencia = new Preferencia(bateria, calidad, memoria, frecuencia);
+
+        return preferencia;
+    }
+
+    /*Consulta el token y la url del proyecto de la API en preferencias*/
+    public PreferenciaAPI getPreferenciaAPI() {
+        PreferenciaAPI preferencia;
+
+        SharedPreferences prefs =
+                getSharedPreferences("PreferenciasAPI", Context.MODE_PRIVATE);
+
+        String token = prefs.getString("token", "");
+        String url = prefs.getString("url", "");
+
+        preferencia = new PreferenciaAPI(token, url);
 
         return preferencia;
     }
