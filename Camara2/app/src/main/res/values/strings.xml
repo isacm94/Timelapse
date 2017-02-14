@@ -25,9 +25,12 @@
     <string name="title_frecuencia">Frecuencia de fotos</string>
     <string name="title_memoria">Memoria restante</string>
     <string name="title_calidad">Calidad de foto</string>
-    <string name="summary_calidad">Controlar la calidad con la que se harán las fotos</string>
+    <string name="summary_calidad">Controlar la calidad con la que se harán las fotos según la memoria restante</string>
     <string name="summary_memoria">Controlar memoria restante para calidad de fotos</string>
-    <string name="summary_frecuencia">Frecuencia con las que se harán las fotos</string>
-    <string name="summary_bateria">Nivel de batería al que quieras que se haga una acción</string>
+    <string name="summary_frecuencia">Frecuencia con las que se harán las fotos según el nivel de batería</string>
+    <string name="summary_bateria">Nivel de batería al que quieras que se cambie la frecuencia</string>
     <string name="title_button_stop_service">Parar servicio</string>
+    <string name="title_total_fotos">Total fotos</string>
+    <string name="title_num_fotos">Número de fotos</string>
+    <string name="summary_num_fotos">Número total de fotos que hará la aplicación</string>
 </resources>

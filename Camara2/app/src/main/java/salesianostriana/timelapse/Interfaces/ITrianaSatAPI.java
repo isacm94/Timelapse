@@ -21,6 +21,7 @@ public interface ITrianaSatAPI {
 
     String ENDPOINT_API = "http://trianasat2-salesianostriana.rhcloud.com/";
     String ENDPOINT_SALESIANOS = "http://www.salesianos-triana.com/";
+    String ENDPOINT_API_LOCAL = "http://172.27.0.136:8080";
 
     @GET("proyectos/search/findByToken")
     Call<ListProyectos> obtenerProyecto(@Query("token") String token);

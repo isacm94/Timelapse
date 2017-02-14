@@ -40,4 +40,14 @@
         <item>Media</item>
         <item>Baja</item>
     </string-array>
+    <string-array name="num_fotos">
+        <item>500</item>
+        <item>650</item>
+        <item>800</item>
+    </string-array>
+    <string-array name="num_fotos_values">
+        <item>500</item>
+        <item>650</item>
+        <item>800</item>
+    </string-array>
 </resources>

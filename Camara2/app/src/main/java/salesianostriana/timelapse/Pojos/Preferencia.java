@@ -11,16 +11,18 @@ public class Preferencia {
     private String calidad;
     private String memoria;
     private String frecuencia;
+    private String numFotos;
 
     /*CONSTRUCTORES*/
     public Preferencia() {
     }
 
-    public Preferencia(String bateria, String calidad, String memoria, String frecuencia) {
+    public Preferencia(String bateria, String calidad, String memoria, String frecuencia, String numFotos) {
         this.bateria = bateria;
         this.calidad = calidad;
         this.memoria = memoria;
         this.frecuencia = frecuencia;
+        this.numFotos = numFotos;
     }
 
     /*GETTERS & SETTERS*/
@@ -44,7 +46,7 @@ public class Preferencia {
     }
 
     public int getMemoria() {
-        if(memoria.equals("")){
+        if (memoria.equals("")) {
             memoria = "0";
         }
         return Integer.parseInt(memoria);
@@ -62,8 +64,16 @@ public class Preferencia {
         this.frecuencia = frecuencia;
     }
 
-    /*MÉTODOS*/
+    public int getNumFotos() {
+        return Integer.parseInt(numFotos);
+    }
 
+    public void setNumFotos(String numFotos) {
+        this.numFotos = numFotos;
+    }
+
+
+    /*MÉTODOS*/
     @Override
     public String toString() {
         return "Preferencia{" +
@@ -71,7 +81,7 @@ public class Preferencia {
                 ", calidad='" + calidad + '\'' +
                 ", memoria='" + memoria + '\'' +
                 ", frecuencia='" + frecuencia + '\'' +
+                ", numFotos='" + numFotos + '\'' +
                 '}';
     }
-
 }

@@ -9,9 +9,13 @@ import com.google.gson.annotations.SerializedName;
 
 public class FotoInfo {
 
-    @SerializedName("fecha")
+    @SerializedName("fecha_captura")
     @Expose
-    private Long fecha;
+    private Long fecha_captura;
+
+    @SerializedName("fecha_subida")
+    @Expose
+    private String fecha_subida;
 
     @SerializedName("foto")
     @Expose
@@ -29,20 +33,21 @@ public class FotoInfo {
     public FotoInfo() {
     }
 
-    public FotoInfo(Long fecha, String foto, Double estado_bateria, String proyecto) {
-        this.fecha = fecha;
+    public FotoInfo(Long fecha_captura, String fecha_subida, String foto, Double estado_bateria, String proyecto) {
+        this.fecha_captura = fecha_captura;
+        this.fecha_subida = fecha_subida;
         this.foto = foto;
         this.estado_bateria = estado_bateria;
         this.proyecto = proyecto;
     }
 
     /* GETTERS & SETTERS*/
-    public Long getFecha() {
-        return fecha;
+    public Long getFechaCaptura() {
+        return fecha_captura;
     }
 
-    public void setFecha(Long fecha) {
-        this.fecha = fecha;
+    public void setFechaCaptura(Long fecha) {
+        this.fecha_captura = fecha;
     }
 
     public String getFoto() {
@@ -67,5 +72,21 @@ public class FotoInfo {
 
     public void setProyecto(String proyecto) {
         this.proyecto = proyecto;
+    }
+
+    public Long getFecha_captura() {
+        return fecha_captura;
+    }
+
+    public void setFecha_captura(Long fecha_captura) {
+        this.fecha_captura = fecha_captura;
+    }
+
+    public String getFecha_subida() {
+        return fecha_subida;
+    }
+
+    public void setFecha_subida(String fecha_subida) {
+        this.fecha_subida = fecha_subida;
     }
 }

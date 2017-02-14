@@ -231,11 +231,11 @@ public class FotosDatabase {
 
         return listFotos;
     }
-    public Foto getFirstNoSubida() throws SQLException {
+    public Foto getLastNoSubida() throws SQLException {
 
         List<Foto> listFotos = new ArrayList<>();
 
-        Cursor cursor = this.myBD.rawQuery("SELECT * FROM " + DATABASE_TABLE + " WHERE subida = 0 LIMIT 1", null);
+        Cursor cursor = this.myBD.rawQuery("SELECT * FROM " + DATABASE_TABLE + " WHERE subida = 0 ORDER BY "+FECHA_MILISEGUNDOS+" desc LIMIT 1", null);
 
         if (cursor.moveToFirst()) {
             //Recorremos el cursor hasta que no haya más registros

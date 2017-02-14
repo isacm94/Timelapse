@@ -38,4 +38,15 @@
             android:entryValues="@array/calidad_fotos_values"
             android:defaultValue="1"/>
     </PreferenceCategory>
+    <PreferenceCategory
+        android:key="pref_totalFotos"
+        android:title="@string/title_total_fotos">
+        <ListPreference
+            android:key="num_fotos"
+            android:title="@string/title_num_fotos"
+            android:summary="@string/summary_num_fotos"
+            android:entries="@array/num_fotos"
+            android:entryValues="@array/num_fotos_values"
+            android:defaultValue="800"/>
+    </PreferenceCategory>
 </PreferenceScreen>
