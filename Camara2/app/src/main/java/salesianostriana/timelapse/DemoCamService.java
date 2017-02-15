@@ -67,6 +67,7 @@ import salesianostriana.timelapse.Interfaces.ITrianaSatAPI;
 import salesianostriana.timelapse.Pojos.API.FotoInfo;
 import salesianostriana.timelapse.Pojos.Foto;
 import salesianostriana.timelapse.Pojos.Preferencia;
+import salesianostriana.timelapse.Pojos.PreferenciaAPI;
 
 /**
  * Created by Keval on 11-Nov-16.
@@ -74,7 +75,7 @@ import salesianostriana.timelapse.Pojos.Preferencia;
  * @author {@link 'https://github.com/kevalpatel2106'}
  */
 
-public class TimelapseService extends HiddenCameraService {
+public class DemoCamService extends HiddenCameraService {
 
     String TAG = "TIMELAPSE_INFO";
     int cont = 1;
@@ -380,7 +381,7 @@ public class TimelapseService extends HiddenCameraService {
         String fecha_subida = new SimpleDateFormat(FORMAT_DATE).format(Calendar.getInstance().getTime());
 
 
-        final FotoInfo fotoInfo = new FotoInfo(foto.getFechaMilisegundos(), fecha_subida, urlFoto, foto.getBateria(), getHrefProyecto());
+        final FotoInfo fotoInfo = new FotoInfo(foto.getFechaMilisegundos(), fecha_subida, urlFoto, foto.getBateria(), getPreferenciaAPI().getUrl());
 
         Call<ResponseBody> call = service.subirFotoInfo(fotoInfo);
         call.enqueue(new Callback<ResponseBody>() {
@@ -496,7 +497,6 @@ public class TimelapseService extends HiddenCameraService {
         for (Foto f : listFotos) {
             Log.i(TAG, f.toString());
         }
-
         Log.i(TAG, "**************************************");
         return listFotos;
     }
@@ -618,14 +618,19 @@ public class TimelapseService extends HiddenCameraService {
         return preferencia;
     }
 
-    /*Consulta la url del proyecto de la API en preferencias*/
-    public String getHrefProyecto() {
+    /*Consulta el token y la url del proyecto de la API en preferencias*/
+    public PreferenciaAPI getPreferenciaAPI() {
+        PreferenciaAPI preferencia;
+
         SharedPreferences prefs =
-                getSharedPreferences(Constantes.PREFERENCIAS_API, Context.MODE_PRIVATE);
+                getSharedPreferences("PreferenciasAPI", Context.MODE_PRIVATE);
 
-        String url = prefs.getString(Constantes.PREF_HREF_PROYECTO, "");
+        String token = prefs.getString("token", "");
+        String url = prefs.getString("url", "");
 
-        return url;
+        preferencia = new PreferenciaAPI(token, url);
+
+        return preferencia;
     }
 
     @Override
