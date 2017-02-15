@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:key="preferencias_principal">
+    <PreferenceCategory
+        android:key="pref_batFre"
+        android:title="@string/title_bateria_frecuencia">
+        <ListPreference
+            android:defaultValue="30"
+            android:entries="@array/nivel_bateria"
+            android:entryValues="@array/nivel_bateria_values"
+            android:key="bateria"
+            android:summary="@string/summary_bateria"
+            android:title="@string/title_bateria" />
+        <ListPreference
+            android:defaultValue="60"
+            android:entries="@array/frecuencia_fotos"
+            android:entryValues="@array/frecuencia_fotos_values"
+            android:key="frecuencia"
+            android:summary="@string/summary_frecuencia"
+            android:title="@string/title_frecuencia" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="pref_memCal"
+        android:title="@string/title_memoria_calidad">
+        <ListPreference
+            android:defaultValue="4"
+            android:entries="@array/memoria"
+            android:entryValues="@array/memoria_values"
+            android:key="memoria"
+            android:summary="@string/summary_memoria"
+            android:title="@string/title_memoria" />
+        <ListPreference
+            android:defaultValue="Baja"
+            android:entries="@array/calidad_foto"
+            android:entryValues="@array/calidad_fotos_values"
+            android:key="calidad"
+            android:summary="@string/summary_calidad"
+            android:title="@string/title_calidad" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="pref_totalFotos"
+        android:title="@string/title_total_fotos">
+        <ListPreference
+            android:defaultValue="800"
+            android:entries="@array/num_fotos"
+            android:entryValues="@array/num_fotos_values"
+            android:key="num_fotos"
+            android:summary="@string/summary_num_fotos"
+            android:title="@string/title_num_fotos" />
+    </PreferenceCategory>
+</PreferenceScreen>
