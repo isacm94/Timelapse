@@ -15,7 +15,7 @@
   -->
 
 <resources>
-    <string name="app_name">Timelapse TrianaSat</string>
+    <string name="app_name">Timelapse</string>
     <string name="title_button_service">Lanzar servicio</string>
     <string name="settings">Ajustes</string>
     <string name="title_bateria_frecuencia">Batería-Frecuencia</string>
@@ -33,7 +33,6 @@
     <string name="title_total_fotos">Total fotos</string>
     <string name="title_num_fotos">Número de fotos</string>
     <string name="summary_num_fotos">Número total de fotos que hará la aplicación</string>
-<<<<<<< HEAD:Timelapse/app/src/main/res/values/strings.xml
     <string name="ok">Ok</string>
     <string name="tiene_codigo_valido">Proyecto no encontrado</string>
     <string name="dar_alta_proyecto">¿Tiene un código válido? Acceda a su panel de configuración del proyecto en </string>
@@ -41,6 +40,4 @@
     <string name="desvincular_mensaje">¿Desea desvincular el proyecto de su dispositivo?</string>
     <string name="aceptar">Aceptar</string>
     <string name="cancelar">Cancelar</string>
-=======
->>>>>>> d5f6d3cbfcbbffe706cf45ac0299d8d0eeb67c62:Camara2/app/src/main/res/values/strings.xml
 </resources>
