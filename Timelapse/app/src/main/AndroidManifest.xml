@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="salesianostriana.timelapse">
+    package="salesianostriana.timelapse"
+    >
 
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.INTERNET" />
+<<<<<<< HEAD:Timelapse/app/src/main/AndroidManifest.xml
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+=======
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission."/>
+>>>>>>> d5f6d3cbfcbbffe706cf45ac0299d8d0eeb67c62:Camara2/app/src/main/AndroidManifest.xml
 
     <application
         android:allowBackup="true"
@@ -13,8 +19,13 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+<<<<<<< HEAD:Timelapse/app/src/main/AndroidManifest.xml
 
         <activity android:name=".activities.MainActivity">
+=======
+        <activity android:name=".Activities.MainActivity"
+            android:screenOrientation="portrait">
+>>>>>>> d5f6d3cbfcbbffe706cf45ac0299d8d0eeb67c62:Camara2/app/src/main/AndroidManifest.xml
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -22,6 +33,7 @@
             </intent-filter>
         </activity>
 
+<<<<<<< HEAD:Timelapse/app/src/main/AndroidManifest.xml
         <activity
             android:name=".activities.TimelapseActivity"
             android:screenOrientation="portrait">
@@ -30,8 +42,11 @@
 
         <activity android:name=".activities.PreferencesActivity" />
         <activity android:name=".activities.ScannerActivity" />
+=======
+        <service android:name=".DemoCamService" />
+>>>>>>> d5f6d3cbfcbbffe706cf45ac0299d8d0eeb67c62:Camara2/app/src/main/AndroidManifest.xml
 
-        <service android:name=".TimelapseService" />
+        <activity android:name=".Activities.PreferencesActivity"></activity>
     </application>
 
 </manifest>
