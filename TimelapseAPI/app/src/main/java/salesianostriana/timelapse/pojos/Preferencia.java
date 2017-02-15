@@ -6,6 +6,9 @@ import static java.lang.Integer.parseInt;
  * Created by Isabel on 30/01/2017.
  */
 
+/**
+ * Clase para gestionar las preferencias guardadas por el usuario
+ */
 public class Preferencia {
     private String bateria;
     private String calidad;

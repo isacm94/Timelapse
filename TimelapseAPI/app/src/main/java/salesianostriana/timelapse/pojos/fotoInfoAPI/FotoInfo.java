@@ -1,4 +1,4 @@
-package salesianostriana.timelapse.pojos.API;
+package salesianostriana.timelapse.pojos.fotoInfoAPI;
 
 /**
  * Created by Isabel on 12/02/2017.

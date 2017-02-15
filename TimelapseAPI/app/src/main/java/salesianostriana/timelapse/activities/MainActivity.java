@@ -19,10 +19,9 @@ import java.util.List;
 import salesianostriana.timelapse.Constantes;
 import salesianostriana.timelapse.R;
 
-
 /**
  * Activity en el que se comprueba si está vinculado el proyecto.
- *Si lo está lanza directamente el TimelapseActivity sino el ScannerActivity para coger el código QR y vincularlo
+ * Si lo está lanza directamente el TimelapseActivity sino el ScannerActivity para coger el código QR y vincularlo
  */
 public class MainActivity extends AppCompatActivity {
     private Button buttonVincularProyecto;

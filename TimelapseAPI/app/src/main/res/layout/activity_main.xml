@@ -18,7 +18,7 @@
         android:paddingLeft="30dp"
         android:paddingRight="30dp"
         android:paddingTop="15dp"
-        android:text="VINCULAR A PROYECTO"
+        android:text="@string/vincular_proyecto"
         android:textColor="@android:color/white"
         android:textSize="20dp" />
 

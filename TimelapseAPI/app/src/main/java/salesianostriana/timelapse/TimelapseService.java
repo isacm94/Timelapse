@@ -45,7 +45,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.List;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -56,6 +55,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import salesianostriana.timelapse.bd.FotosDatabase;
 import salesianostriana.timelapse.hiddenCamera.CameraConfig;
 import salesianostriana.timelapse.hiddenCamera.CameraError;
 import salesianostriana.timelapse.hiddenCamera.HiddenCameraService;
@@ -64,22 +64,18 @@ import salesianostriana.timelapse.hiddenCamera.config.CameraFacing;
 import salesianostriana.timelapse.hiddenCamera.config.CameraImageFormat;
 import salesianostriana.timelapse.hiddenCamera.config.CameraResolution;
 import salesianostriana.timelapse.Interfaces.ITrianaSatAPI;
-import salesianostriana.timelapse.pojos.API.FotoInfo;
-import salesianostriana.timelapse.pojos.Foto;
+import salesianostriana.timelapse.pojos.fotoInfoAPI.FotoInfo;
+import salesianostriana.timelapse.bd.Foto;
 import salesianostriana.timelapse.pojos.Preferencia;
 
 /**
- * Created by Keval on 11-Nov-16.
- *
- * @author {@link 'https://github.com/kevalpatel2106'}
- */
-
+ * Servicio que realiza la captura y la subida de fotos en segundo plano.
+ * */
 public class TimelapseService extends HiddenCameraService {
 
     String TAG = "TIMELAPSE_INFO";
-    int cont = 1;
+    int cont = 1, bateria;
     Preferencia preferencia;
-    int bateria;
     FotosDatabase fotosDB;
     File ruta_sd = new File("/storage/emulated/0/Android/data/salesianostriana.timelapse/files");
     File ruta_sd_resize = new File("/storage/emulated/0/Android/data/salesianostriana.timelapse/resize");
@@ -91,6 +87,9 @@ public class TimelapseService extends HiddenCameraService {
         return null;
     }
 
+    /**
+     * Primera fúnción que ejecuta el servicio
+     */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         fotosDB = new FotosDatabase(this);
@@ -120,20 +119,21 @@ public class TimelapseService extends HiddenCameraService {
                         if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
                             registerReceiver(mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
 
-                            int memoriaActual = getMemoriaActual();
+                            int memoriaRestanteActual = getMemoriaDisponible();
 
-                            if (memoriaActual <= preferencia.getMemoria()) {
+                            //Establece la calidad en la que se será tomada la foto según la memoria restante
+                            if (memoriaRestanteActual <= preferencia.getMemoria()) {
                                 switch (preferencia.getCalidad()) {
                                     case "Alta":
-                                        Log.i("CALIDÁ", "ALTA");
+                                        Log.i(TAG, "Calidad Alta");
                                         cameraConfig.getBuilder(getApplicationContext()).setCameraResolution(CameraResolution.HIGH_RESOLUTION);
                                         break;
                                     case "Media":
-                                        Log.i("CALIDÁ", "MEDIA");
+                                        Log.i(TAG, "Calidad Media");
                                         cameraConfig.getBuilder(getApplicationContext()).setCameraResolution(CameraResolution.MEDIUM_RESOLUTION);
                                         break;
                                     case "Baja":
-                                        Log.i("CALIDÁ", "BAJA");
+                                        Log.i(TAG, "Calidad Baja");
                                         cameraConfig.getBuilder(getApplicationContext()).setCameraResolution(CameraResolution.LOW_RESOLUTION);
                                         break;
                                     default:
@@ -142,13 +142,16 @@ public class TimelapseService extends HiddenCameraService {
                                 }
                             }
 
-                            startCamera(cameraConfig);
+                            startCamera(cameraConfig);//Inicia cámara
 
+                            //5 segundos para que se pueda preparar la cámara
                             try {
-                                Thread.sleep(5000);//5 segundos para que se pueda preparar la cámara
+                                Thread.sleep(5000);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
+
+                            //Sólo hará fotos si el número de fotos guardadas es menos al elegido por el usuario en preferencias
                             if (getCountFotos() < preferencia.getNumFotos()) {
                                 if (bateria <= preferencia.getBateria() && bateria != 0) {
 
@@ -166,6 +169,7 @@ public class TimelapseService extends HiddenCameraService {
                                 }
                             }
 
+                            //Si está parada la subida, la reinicia
                             if (!estaSubiendo) {
                                 subirFoto();
                             }
@@ -187,29 +191,33 @@ public class TimelapseService extends HiddenCameraService {
         return START_NOT_STICKY;
     }
 
+    /**
+     * Función a la que llega cuando se ha hecho una foto
+     * @param imageFile Archivo de la imagen
+     */
     @Override
     public void onImageCapture(@NonNull File imageFile) {
-
-        String dir = imageFile.getAbsolutePath();
-
-        Matrix matrix = new Matrix();
-
+        Matrix matrix = new Matrix();//Rota la imagen
         matrix.postRotate(90);
 
+        //Transforma el archivo en bitmap
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.RGB_565;
         Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
 
         bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
 
-        copyImageToSD(bitmap);
+        copyImage(bitmap);//Copia la imagen en la tarjeta SD
 
-        stopSelf();
+        stopSelf();//Para las capturas de imágenes
     }
 
-    private void copyImageToSD(Bitmap bitmapImage) {
-
-        //Log.i(TAG, "Intento de copia de Foto " + cont);
+    /**
+     * Copia la imagen en la memoria SD e inserta la información de la foto en la base de datos
+     * ruta_sd --> ruta donde copia la imagen
+     * @param bitmapImage
+     */
+    private void copyImage(Bitmap bitmapImage) {
 
         String FORMAT_DATE = "dd-MM-yy_HH:mm:ss";
         String timeStamp = new SimpleDateFormat(FORMAT_DATE).format(Calendar.getInstance().getTime());
@@ -220,18 +228,16 @@ public class TimelapseService extends HiddenCameraService {
             ruta_sd.mkdir();
         }
 
-
         // Create imageDir
         File fileImage = new File(ruta_sd, filename);
 
         FileOutputStream fos = null;
-        try {
+        try {//Transforma bitmap a file y lo guarda
             fos = new FileOutputStream(fileImage);
 
-            // Use the compress method on the BitMap object to write image to the OutputStream
             bitmapImage.compress(Bitmap.CompressFormat.JPEG, 100, fos);
 
-            insertFoto(new Foto(fileImage.getName(), milisegundos, (double) bateria, 0));
+            insertFoto(new Foto(fileImage.getName(), milisegundos, (double) bateria, 0));//Inserta foto en la base de datos
 
             Log.i(TAG, "Foto " + cont + " copiada Ruta: " + fileImage.getAbsolutePath());
 
@@ -239,7 +245,7 @@ public class TimelapseService extends HiddenCameraService {
 
             fos.close();
 
-            resizeFoto(bitmapImage, filename);
+            resizeFoto(bitmapImage, filename);//Guarda la foto redimensionada en el teléfono
         } catch (Exception e) {
             Log.e(TAG, "Error copiando archivo");
 
@@ -273,21 +279,26 @@ public class TimelapseService extends HiddenCameraService {
         stopSelf();
     }
 
+    /**
+     * Redimensiona la imagen haciendola más pequeña. Esta imagen es la que será subida al servidor.
+     * Después de que sea subida, será eliminada del teléfono.
+     * ruta_sd_resize --> donde se guardará las fotos redimensionadas
+     * @param bitmapImage Imagen
+     * @param filename Nombre de la imagen
+     */
     public void resizeFoto(Bitmap bitmapImage, String filename) {
+        int width = 2000, height = 1500;
         if (!ruta_sd_resize.exists()) {
             ruta_sd_resize.mkdir();
         }
 
-
-        // Create imageDir
         File fileImage = new File(ruta_sd_resize, filename);
 
         FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(fileImage);
-            bitmapImage = Bitmap.createBitmap(bitmapImage, 0, 0, 2000, 1500, new Matrix(), true);
+        try {//Guarda la imagen redimensionada
 
-            // Use the compress method on the BitMap object to write image to the OutputStream
+            fos = new FileOutputStream(fileImage);
+            bitmapImage = Bitmap.createBitmap(bitmapImage, 0, 0, width, height, new Matrix(), true);
             bitmapImage.compress(Bitmap.CompressFormat.JPEG, 100, fos);
 
             fos.close();
@@ -300,28 +311,28 @@ public class TimelapseService extends HiddenCameraService {
     }
 
 
+    /**
+     * Sube el archivo de la última foto capturada al servidor, si va bien la subida empieza la subida de la información a la API
+     */
     public void subirFoto() {
-        //Log.i(TAG, "estaSubiendo: "+estaSubiendo);
-
-        if (!checkInternet(getApplicationContext())) {
+        if (! checkInternet(getApplicationContext())) {//Si no hay internet cancela la subida
             estaSubiendo = false;
             return;
         }
 
         final Foto foto = getLastFotoNoSubida();
 
-        if (foto == null) {
+        if (foto == null) {//Si no hay fotos, cancela la subida
             estaSubiendo = false;
             Log.i(TAG, "No hay fotos no subidas");
             return;
         }
 
-        final File fileFoto = new File(ruta_sd_resize, foto.getNombre());
+        final File fileFoto = new File(ruta_sd_resize, foto.getNombre());//Foto que subirá
 
-        estaSubiendo = true;
+        estaSubiendo = true;//Si llega hasta aqui, se podrá hacer la subida
+
         //Retrofit
-
-        //Log.i(TAG, "antes retrofit: estaSubiendo: "+estaSubiendo);
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(ITrianaSatAPI.ENDPOINT_SALESIANOS)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -337,7 +348,7 @@ public class TimelapseService extends HiddenCameraService {
 
         // MultipartBody.Part is used to send also the actual file name
         MultipartBody.Part body =
-                MultipartBody.Part.createFormData("fichero", fileFoto.getName(), requestFile);
+                MultipartBody.Part.createFormData("fichero", fileFoto.getName(), requestFile);//'fichero' es el nombre en el que el servidor recibe la foto
 
         // finally, execute the request
         Call<ResponseBody> call = service.subirFoto(body);
@@ -349,11 +360,10 @@ public class TimelapseService extends HiddenCameraService {
                 if (response.isSuccessful()) {
                     Log.i(TAG, "Retrofit success: " + fileFoto.getName());
 
-                    //updateFoto(foto.getId(), 1);//TODO ponerlo en el es successs de la petición a la API
-                    subirFotoInfo(foto);
+                    subirFotoInfo(foto);//Sube información de la foto a la API
                 } else {
                     Log.i(TAG, "Retrofit Error Code: " + response.code() + " " + fileFoto.getName());
-                    subirFotoInfo(foto);
+                    subirFoto();//Intenta otra vez la subida
                 }
 
             }
@@ -361,12 +371,16 @@ public class TimelapseService extends HiddenCameraService {
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
                 Log.e(TAG, "Retrofit onfailure: " + t.getMessage() + " " + fileFoto.getName());
-                subirFotoInfo(foto);
+                subirFoto();//Intenta otra vez la subida
             }
         });
 
     }
 
+    /**
+     * Sube la información de la foto
+     * @param foto Objeto que lleva parte de la información de la foto
+     */
     public void subirFotoInfo(final Foto foto) {
         String urlFoto = "http://www.salesianos-triana.com/dam/trianasat/files/" + foto.getNombre();//Construye URL foto
 
@@ -393,30 +407,35 @@ public class TimelapseService extends HiddenCameraService {
                 if (response.isSuccessful()) {
                     Log.i(TAG, "Retrofit InfoFoto success: " + foto.getNombre());
 
-                    updateFoto(foto.getId(), 1);
+                    updateFoto(foto.getId(), 1);//Establece la foto como subida en la base de datos
 
+                    //Elimina la foto redimensionada
                     final File fileFoto = new File(ruta_sd_resize, foto.getNombre());
-
                     if (fileFoto.delete()) {
                         Log.i(TAG, fileFoto.getAbsolutePath() + ": Borrado");
                     } else
                         Log.i(TAG, fileFoto.getAbsolutePath() + ": No borrado");
 
-                    subirFoto();
+                    subirFoto();//Inicia subida
                 } else {
                     Log.i(TAG, "Retrofit Error InfoFoto Code: " + response.code() + ", " + response.message() + ", " + foto.getNombre());
-                    subirFoto();
+                    subirFoto();//Inicia subida
                 }
             }
 
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
                 Log.e(TAG, "Retrofit InfoFoto onfailure: " + t.getMessage() + " " + foto.getNombre());
-                subirFoto();
+                subirFoto();//Inicia subida
             }
         });
     }
 
+    /**
+     * Comprueba si hay internet
+     * @param ctx Contexto
+     * @return
+     */
     public boolean checkInternet(Context ctx) {
         boolean bandera = true;
         ConnectivityManager conMgr = (ConnectivityManager) ctx.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -436,6 +455,11 @@ public class TimelapseService extends HiddenCameraService {
     /*****************************************/
     /*********** BASE DE DATOS **************/
     /*****************************************/
+
+    /**
+     * Añade una foto a la base de datos
+     * @param foto
+     */
     public void insertFoto(Foto foto) {
         /*Abre base de datos en escritura*/
         try {
@@ -455,54 +479,10 @@ public class TimelapseService extends HiddenCameraService {
         fotosDB.close();
     }
 
-    public List<Foto> getAllFotos() {
-
-        Log.i(TAG, "*********** FOTOS ***************");
-        /*Abre base de datos en lectura*/
-        try {
-            fotosDB.openRead();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        /*Lee todos los registros*/
-        List<Foto> listFotos = fotosDB.getAll();
-
-        /*Cierra base de datos*/
-        fotosDB.close();
-
-        for (Foto f : listFotos) {
-            Log.i(TAG, f.toString());
-        }
-
-        Log.i(TAG, "**************************************");
-        return listFotos;
-    }
-
-    public List<Foto> getFotosSubidas() {
-
-        Log.i(TAG, "**************FOTOS SUBIDAS*******");
-        /*Abre base de datos en lectura*/
-        try {
-            fotosDB.openRead();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        /*Lee las fotos subidas*/
-        List<Foto> listFotos = fotosDB.getSubidas();
-
-        /*Cierra base de datos*/
-        fotosDB.close();
-
-        for (Foto f : listFotos) {
-            Log.i(TAG, f.toString());
-        }
-
-        Log.i(TAG, "**************************************");
-        return listFotos;
-    }
-
+    /**
+     * Consulta la última foto no subida
+     * @return
+     */
     public Foto getLastFotoNoSubida() {
 
         /*Abre base de datos en lectura*/
@@ -512,7 +492,7 @@ public class TimelapseService extends HiddenCameraService {
             e.printStackTrace();
         }
 
-        /*Lee las fotos subidas*/
+        /*Lee última foto no subida*/
         Foto foto = fotosDB.getLastNoSubida();
 
         /*Cierra base de datos*/
@@ -521,6 +501,10 @@ public class TimelapseService extends HiddenCameraService {
         return foto;
     }
 
+    /**
+     * Devuelve el número total de fotos guardadas
+     * @return
+     */
     public int getCountFotos() {
 
         /*Abre base de datos en lectura*/
@@ -530,7 +514,7 @@ public class TimelapseService extends HiddenCameraService {
             e.printStackTrace();
         }
 
-        /*Lee las fotos subidas*/
+        /*Lee el número de fotos*/
         int contFotos = fotosDB.getCount();
 
         /*Cierra base de datos*/
@@ -539,30 +523,11 @@ public class TimelapseService extends HiddenCameraService {
         return contFotos;
     }
 
-    public List<Foto> getFotosNoSubidas() {
-        //Log.i(TAG, "**************FOTOS NO SUBIDAS*******");
-
-        /*Abre base de datos en lectura*/
-        try {
-            fotosDB.openRead();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        /*Lee las fotos no subidas*/
-        List<Foto> listFotos = fotosDB.getNoSubidas();
-
-        /*Cierra base de datos*/
-        fotosDB.close();
-
-        for (Foto f : listFotos) {
-            //Log.i(TAG, f.toString());
-        }
-
-        Log.i(TAG, "**************************************");
-        return listFotos;
-    }
-
+    /**
+     * Actualiza el estado de subida de una foto
+     * @param id ID de la foto en la base de datos
+     * @param subida 0 --> no subida, 1 --> subida
+     */
     public void updateFoto(long id, int subida) {
         /*Abre base de datos en escritura*/
         try {
@@ -582,17 +547,23 @@ public class TimelapseService extends HiddenCameraService {
     /********************************************/
     /*********** MEMORIA & BATERIA **************/
     /********************************************/
-    private int getMemoriaActual() {
+
+    /**
+     * Consulta los gigabytes de memoria restantes
+     * @return
+     */
+    private int getMemoriaDisponible() {
         StatFs stat_fs = new StatFs(Environment.getExternalStorageDirectory().getPath());
         double avail_sd_space = (double) stat_fs.getAvailableBlocks() * (double) stat_fs.getBlockSize();
         double GB_Available = (avail_sd_space / 1073741824);
 
         String numberFormat = String.format("%f", GB_Available);
         return Integer.parseInt(numberFormat.split(",")[0]);
-
     }
 
-
+    /**
+     * Consulta la bateria restante
+     */
     private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -604,6 +575,11 @@ public class TimelapseService extends HiddenCameraService {
     /********************************************/
     /*********** OTROS **************************/
     /********************************************/
+
+    /**
+     * Consulta las preferencias guardadas
+     * @return
+     */
     public Preferencia getPreferencia() {
         Preferencia preferencia;
 
@@ -620,7 +596,9 @@ public class TimelapseService extends HiddenCameraService {
         return preferencia;
     }
 
-    /*Consulta la url del proyecto de la API en preferencias*/
+    /**
+     * Consulta la url del proyecto de la API en preferencias
+     * */
     public String getHrefProyecto() {
         SharedPreferences prefs =
                 getSharedPreferences(Constantes.PREFERENCIAS_API, Context.MODE_PRIVATE);

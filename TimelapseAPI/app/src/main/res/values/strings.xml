@@ -37,7 +37,8 @@
     <string name="tiene_codigo_valido">Proyecto no encontrado</string>
     <string name="dar_alta_proyecto">¿Tiene un código válido? Acceda a su panel de configuración del proyecto en </string>
     <string name="action_desvincular_proyecto">Desvincular</string>
-    <string name="desvincular_mensaje">¿Desea desvincular el proyecto de su dispositivo?</string>
+    <string name="desvincular_mensaje">¿Desea desvincular el proyecto de su dispositivo? Se borrarán todos los datos</string>
     <string name="aceptar">Aceptar</string>
     <string name="cancelar">Cancelar</string>
+    <string name="vincular_proyecto">VINCULAR A PROYECTO</string>
 </resources>

@@ -32,7 +32,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import salesianostriana.timelapse.Constantes;
-import salesianostriana.timelapse.FotosDatabase;
+import salesianostriana.timelapse.bd.FotosDatabase;
 import salesianostriana.timelapse.R;
 import salesianostriana.timelapse.TimelapseService;
 
@@ -137,12 +137,12 @@ public class TimelapseActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
 
         switch (item.getItemId()) {
-            case R.id.action_preferencias: {
+            case R.id.action_preferencias: {//Lanza Activity preferencias
                 Intent i = new Intent(this, PreferencesActivity.class);
                 startActivity(i);
                 return true;
             }
-            case R.id.action_desvincular: {
+            case R.id.action_desvincular: {//Lanza dialogo para preguntar si quiere disvincular el proyecto
                 AlertDialog.Builder builder;
                 builder = new AlertDialog.Builder(this);
 

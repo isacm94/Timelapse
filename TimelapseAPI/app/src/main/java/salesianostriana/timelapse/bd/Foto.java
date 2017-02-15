@@ -1,4 +1,4 @@
-package salesianostriana.timelapse.pojos;
+package salesianostriana.timelapse.bd;
 
 /**
  * Created by Isabel on 06/02/2017.
@@ -71,8 +71,7 @@ public class Foto {
         this.subida = subida;
     }
 
-    /*Metodos*/
-
+    /*Métodos*/
     @Override
     public String toString() {
         return "Foto{" +

@@ -10,7 +10,7 @@ import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.Part;
 import retrofit2.http.Query;
-import salesianostriana.timelapse.pojos.API.FotoInfo;
+import salesianostriana.timelapse.pojos.fotoInfoAPI.FotoInfo;
 import salesianostriana.timelapse.pojos.hrefAPI.ListProyectos;
 
 /**

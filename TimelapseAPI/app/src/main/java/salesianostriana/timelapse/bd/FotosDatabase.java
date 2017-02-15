@@ -1,4 +1,4 @@
-package salesianostriana.timelapse;
+package salesianostriana.timelapse.bd;
 
 
 import android.content.ContentValues;
@@ -12,20 +12,17 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
-import salesianostriana.timelapse.pojos.Foto;
-
 /**
  * Created by Isabel on 06/02/2017.
  */
 
 public class FotosDatabase {
     //CONSTANTES, columnas
-    public static final String ID = "_id";
-    public static final String NOMBRE = "nombre";
-    public static final String FECHA_MILISEGUNDOS = "fecha";
-    public static final String BATERIA = "bateria";
-    public static final String SUBIDA = "subida";
-
+    static final String ID = "_id";
+    static final String NOMBRE = "nombre";
+    static final String FECHA_MILISEGUNDOS = "fecha";
+    static final String BATERIA = "bateria";
+    static final String SUBIDA = "subida";
 
     static final String TAG = "FotosDatabase";
     static final String DATABASE_NAME = "FotosDatabase";
@@ -33,7 +30,7 @@ public class FotosDatabase {
     static final int DATABASE_VERSION = 1;
 
 
-    //Setencia para crear la tabla libros
+    /********* Sentencia para crear la tabla libros ******/
     private static final String DATABASE_CREATE = "create table " + DATABASE_TABLE + " (" + ID + " integer primary key autoincrement, "
             + NOMBRE + " text, "
             + FECHA_MILISEGUNDOS + " integer, "
@@ -45,11 +42,17 @@ public class FotosDatabase {
 
     final Context mCtx;
 
+    /**
+     * Conctructor
+     * */
     public FotosDatabase(Context ctx) {
         this.mCtx = ctx;
         mDbHelper = new DatabaseHelper(mCtx);
     }
 
+    /**
+     * Crea la tabla en la base de datos
+     * */
     private class DatabaseHelper extends SQLiteOpenHelper {
 
         DatabaseHelper(Context context) {
@@ -58,7 +61,7 @@ public class FotosDatabase {
 
         @Override
         public void onCreate(SQLiteDatabase db) {
-            db.execSQL(DATABASE_CREATE);//Ejecutamos la setencia de crear la tabla
+            db.execSQL(DATABASE_CREATE);//Ejecutamos la sentencia de crear la tabla
         }
 
 
@@ -193,7 +196,7 @@ public class FotosDatabase {
     }
 
     /**
-     * Consulta las fotos subidas
+     * Consulta todas las fotos subidas
      */
     public List<Foto> getSubidas() throws SQLException {
 
@@ -218,7 +221,7 @@ public class FotosDatabase {
     }
 
     /**
-     * Consulta las fotos no subidas
+     * Consulta todas las fotos no subidas
      */
     public List<Foto> getNoSubidas() throws SQLException {
 
@@ -241,6 +244,12 @@ public class FotosDatabase {
 
         return listFotos;
     }
+
+    /**
+     * Consulta la última foto no subida
+     * @return
+     * @throws SQLException
+     */
     public Foto getLastNoSubida() throws SQLException {
 
         List<Foto> listFotos = new ArrayList<>();
@@ -259,11 +268,11 @@ public class FotosDatabase {
                 listFotos.add(new Foto(id, path, fecha, bateria, subida));
             } while (cursor.moveToNext());
         }
-        if(listFotos.isEmpty())
+
+        if(listFotos.isEmpty())//Si no existen fotos
             return null;
 
         return listFotos.get(0);
-
     }
 
 

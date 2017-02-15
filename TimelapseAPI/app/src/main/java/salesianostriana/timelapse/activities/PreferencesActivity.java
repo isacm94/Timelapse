@@ -10,8 +10,9 @@ import salesianostriana.timelapse.PreferenciasFragment;
 /**
  * Created by jarmada on 24/01/2017.
  */
+
 /**
- *Activity encargado de lanzar las preferencias de la aplicación
+ * Activity encargado de lanzar las preferencias de la aplicación
  */
 public class PreferencesActivity extends AppCompatActivity {
 
