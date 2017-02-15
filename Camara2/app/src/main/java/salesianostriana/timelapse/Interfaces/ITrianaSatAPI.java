@@ -33,5 +33,4 @@ public interface ITrianaSatAPI {
     @Headers("Accept: application/json")
     @POST("timelapse")
     Call<ResponseBody> subirFotoInfo(@Body FotoInfo fotoInfo);
-
 }
