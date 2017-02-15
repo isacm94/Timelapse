@@ -17,6 +17,9 @@ import salesianostriana.timelapse.pojos.hrefAPI.ListProyectos;
  * Created by rtovar on 07/02/2017.
  */
 
+/**
+ * Interfaz usada por retrofit para subir imágenes
+ */
 public interface ITrianaSatAPI {
 
     String ENDPOINT_API = "http://trianasat2-salesianostriana.rhcloud.com/";

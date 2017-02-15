@@ -38,6 +38,9 @@ import salesianostriana.timelapse.TimelapseService;
 
 import static salesianostriana.timelapse.Constantes.PREFERENCIAS_API;
 
+/**
+ * Activity encargado de lanzar el servicio de Timelapse
+ */
 public class TimelapseActivity extends AppCompatActivity {
 
     TextView estadoServicio;
@@ -49,10 +52,9 @@ public class TimelapseActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_timelapse);
 
-        setTitle("Timelapse " + getNombreProyecto());
+        setTitle("Timelapse " + getNombreProyecto());//Actualiza title con el nombre del proyecto vinculado
 
-        fotosDatabase = new FotosDatabase(this);
-
+        fotosDatabase = new FotosDatabase(this);//Inicializa base de datos
 
         estadoServicio = (TextView) findViewById(R.id.estado_servicio);
 
@@ -65,20 +67,66 @@ public class TimelapseActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Toast.makeText(TimelapseActivity.this, "Iniciando servicio...", Toast.LENGTH_SHORT).show();
                 startService(new Intent(TimelapseActivity.this, TimelapseService.class));
-
                 if (isMyServiceRunning(TimelapseService.class)) {
                     estadoServicio.setText("Servicio Activo");
                     estadoServicio.setTextColor(getResources().getColor(android.R.color.holo_green_light));
-                } else {
-                    estadoServicio.setText("Servicio No Activo");
-                    estadoServicio.setTextColor(getResources().getColor(android.R.color.holo_red_light));
                 }
-
             }
         });
 
     }
 
+    /**
+     * Consulta nombre del proyecto vinculado
+     */
+    public String getNombreProyecto() {
+        SharedPreferences prefs =
+                getSharedPreferences(Constantes.PREFERENCIAS_API, Context.MODE_PRIVATE);
+
+        return prefs.getString(Constantes.PREF_NOMBRE_PROYECTO, "");
+    }
+
+    /*
+    * Elimina todos los datos de la la aplicación. Preferencias y BD
+    * */
+    public void resetAplicacion() {
+        //Elimina preferencias API
+        SharedPreferences sharedPreferencesApi = getSharedPreferences(PREFERENCIAS_API, MODE_PRIVATE);
+        SharedPreferences.Editor editorApi = sharedPreferencesApi.edit();
+        editorApi.clear();
+        editorApi.commit();
+
+        //Elimina preferencias del PreferencesActivity
+        SharedPreferences sharedPreferencesActivity = getSharedPreferences(PREFERENCIAS_API, MODE_PRIVATE);
+        SharedPreferences.Editor editorPreferencesActivity = sharedPreferencesActivity.edit();
+        editorPreferencesActivity.clear();
+        editorPreferencesActivity.commit();
+
+        //Vacía BD
+        fotosDatabase.openWrite();
+        fotosDatabase.deleteAll();
+        fotosDatabase.close();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    /*
+    * Comprueba si un servicio está funcionando
+    */
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /*********** MENÚ **************/
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -133,44 +181,4 @@ public class TimelapseActivity extends AppCompatActivity {
         }
     }
 
-    public void resetAplicacion() {
-        //Elimina preferencias API
-        SharedPreferences sharedPreferencesApi = getSharedPreferences(PREFERENCIAS_API, MODE_PRIVATE);
-        SharedPreferences.Editor editorApi = sharedPreferencesApi.edit();
-        editorApi.clear();
-        editorApi.commit();
-
-        //Elimina preferencias del PreferencesActivity
-        SharedPreferences sharedPreferencesActivity = getSharedPreferences(PREFERENCIAS_API, MODE_PRIVATE);
-        SharedPreferences.Editor editorPreferencesActivity = sharedPreferencesActivity.edit();
-        editorPreferencesActivity.clear();
-        editorPreferencesActivity.commit();
-
-        //Vacía BD
-        fotosDatabase.openWrite();
-        fotosDatabase.deleteAll();
-        fotosDatabase.close();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
-
-    private boolean isMyServiceRunning(Class<?> serviceClass) {
-        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public String getNombreProyecto() {
-        SharedPreferences prefs =
-                getSharedPreferences(Constantes.PREFERENCIAS_API, Context.MODE_PRIVATE);
-
-        return prefs.getString(Constantes.PREF_NOMBRE_PROYECTO, "");
-    }
 }

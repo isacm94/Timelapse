@@ -24,6 +24,9 @@ import salesianostriana.timelapse.Interfaces.ITrianaSatAPI;
 import salesianostriana.timelapse.pojos.hrefAPI.ListProyectos;
 import salesianostriana.timelapse.R;
 
+/**
+ * Activity encargado de escanear el código QR y vincularlo a un proyecto.
+ */
 public class ScannerActivity extends AppCompatActivity implements ZXingScannerView.ResultHandler {
     private ZXingScannerView scannerView;
     private ProgressDialog progressDialog;
