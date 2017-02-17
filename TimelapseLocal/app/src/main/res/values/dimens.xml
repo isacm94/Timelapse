@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><!--
+<!--
   ~ Copyright 2016 Keval Patel.
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +15,8 @@
   -->
 
 <resources>
-    <color name="colorPrimary">#2D404E</color>
-    <color name="colorPrimaryDark">#253440</color>
-    <color name="colorAccent">#FF5252</color>
-    <color name="colorVerdeActivo">#31a638</color>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="margin_left">16dp</dimen>
 </resources>

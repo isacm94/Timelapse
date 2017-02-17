@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="nivel_bateria">
+        <item>50%</item>
+        <item>30%</item>
+        <item>20%</item>
+    </string-array>
+    <string-array name="nivel_bateria_values">
+        <item>50</item>
+        <item>30</item>
+        <item>20</item>
+    </string-array>
+    <string-array name="frecuencia_fotos">
+        <item>1min</item>
+        <item>2min</item>
+        <item>3min</item>
+    </string-array>
+    <string-array name="frecuencia_fotos_values">
+        <item>60</item>
+        <item>120</item>
+        <item>180</item>
+    </string-array>
+    <string-array name="memoria">
+        <item>16GB</item>
+        <item>8GB</item>
+        <item>4GB</item>
+    </string-array>
+    <string-array name="memoria_values">
+        <item>16</item>
+        <item>8</item>
+        <item>4</item>
+    </string-array>
+    <string-array name="calidad_foto">
+        <item>Alta</item>
+        <item>Media</item>
+        <item>Baja</item>
+    </string-array>
+    <string-array name="calidad_fotos_values">
+        <item>Alta</item>
+        <item>Media</item>
+        <item>Baja</item>
+    </string-array>
+    <string-array name="num_fotos">
+        <item>500</item>
+        <item>650</item>
+        <item>800</item>
+    </string-array>
+    <string-array name="num_fotos_values">
+        <item>500</item>
+        <item>650</item>
+        <item>800</item>
+    </string-array>
+</resources>

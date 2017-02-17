@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package salesianostriana.timelapse;
+package salesianostriana.timelapselocal;
 
 import android.Manifest;
 import android.content.BroadcastReceiver;
@@ -27,8 +27,6 @@ import android.database.SQLException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.BatteryManager;
 import android.os.Environment;
 import android.os.Handler;
@@ -46,42 +44,28 @@ import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
-import salesianostriana.timelapse.bd.FotosDatabase;
-import salesianostriana.timelapse.hiddenCamera.CameraConfig;
-import salesianostriana.timelapse.hiddenCamera.CameraError;
-import salesianostriana.timelapse.hiddenCamera.HiddenCameraService;
-import salesianostriana.timelapse.hiddenCamera.HiddenCameraUtils;
-import salesianostriana.timelapse.hiddenCamera.config.CameraFacing;
-import salesianostriana.timelapse.hiddenCamera.config.CameraImageFormat;
-import salesianostriana.timelapse.hiddenCamera.config.CameraResolution;
-import salesianostriana.timelapse.Interfaces.ITrianaSatAPI;
-import salesianostriana.timelapse.pojos.fotoInfoAPI.FotoInfo;
-import salesianostriana.timelapse.bd.Foto;
-import salesianostriana.timelapse.pojos.Preferencia;
-
-import static android.R.attr.data;
+import salesianostriana.timelapselocal.bd.FotosDatabase;
+import salesianostriana.timelapselocal.hiddenCamera.CameraConfig;
+import salesianostriana.timelapselocal.hiddenCamera.CameraError;
+import salesianostriana.timelapselocal.hiddenCamera.HiddenCameraService;
+import salesianostriana.timelapselocal.hiddenCamera.HiddenCameraUtils;
+import salesianostriana.timelapselocal.hiddenCamera.config.CameraFacing;
+import salesianostriana.timelapselocal.hiddenCamera.config.CameraImageFormat;
+import salesianostriana.timelapselocal.hiddenCamera.config.CameraResolution;
+import salesianostriana.timelapselocal.bd.Foto;
+import salesianostriana.timelapselocal.pojos.Preferencia;
 
 /**
  * Servicio que realiza la captura y la subida de fotos en segundo plano.
  */
 public class TimelapseService extends HiddenCameraService {
 
-    String TAG = "TIMELAPSE_INFO";
+    String TAG = "TIMELAPSE_INFO", NOMBRE_PROYECTO = "";
     int cont = 1, bateria;
     Preferencia preferencia;
     FotosDatabase fotosDB;
-    File ruta_sd = new File(Environment.getExternalStorageDirectory() + "/Android/data/salesianostriana.timelapse/files");
-    File ruta_sd_resize = new File(Environment.getExternalStorageDirectory() + "/Android/data/salesianostriana.timelapse/resize");
-    boolean estaSubiendo = false;
+    File ruta_sd = new File(Environment.getExternalStorageDirectory() + "/Android/data/salesianostriana.timelapselocal/files");
+
 
     @Nullable
     @Override
@@ -99,7 +83,8 @@ public class TimelapseService extends HiddenCameraService {
 
         Log.i(TAG, "Preferencia: " + preferencia);
 
-        subirFoto();
+        NOMBRE_PROYECTO = getNombreProyecto();
+
 
         /***************** CÁMARA *****************/
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
@@ -171,10 +156,6 @@ public class TimelapseService extends HiddenCameraService {
                                 }
                             }
 
-                            //Si está parada la subida, la reinicia
-                            if (!estaSubiendo) {
-                                subirFoto();
-                            }
 
                         } else
                             Log.i(TAG, "No tiene permiso");
@@ -226,7 +207,7 @@ public class TimelapseService extends HiddenCameraService {
         String FORMAT_DATE = "dd-MM-yy_HH:mm:ss";
         String timeStamp = new SimpleDateFormat(FORMAT_DATE).format(Calendar.getInstance().getTime());
         long milisegundos = System.currentTimeMillis();
-        String filename = "IMG_" + timeStamp + ".jpg";
+        String filename = "IMG_" + NOMBRE_PROYECTO + "_" + timeStamp + ".jpg";
 
         if (!ruta_sd.exists()) {
             ruta_sd.mkdir();
@@ -249,7 +230,6 @@ public class TimelapseService extends HiddenCameraService {
 
             fos.close();
 
-            resizeFoto(bitmapImage, filename);//Guarda la foto redimensionada en el teléfono
         } catch (Exception e) {
             Log.e(TAG, "Error copiando archivo");
 
@@ -283,181 +263,8 @@ public class TimelapseService extends HiddenCameraService {
         stopSelf();
     }
 
-    /**
-     * Redimensiona la imagen haciendola más pequeña. Esta imagen es la que será subida al servidor.
-     * Después de que sea subida, será eliminada del teléfono.
-     * ruta_sd_resize --> donde se guardará las fotos redimensionadas
-     *
-     * @param bitmapImage Imagen
-     * @param filename    Nombre de la imagen
-     */
-    public void resizeFoto(Bitmap bitmapImage, String filename) {
-        int width = 2000, height = 1500;
-        if (!ruta_sd_resize.exists()) {
-            ruta_sd_resize.mkdir();
-        }
-
-        File fileImage = new File(ruta_sd_resize, filename);
-
-        FileOutputStream fos = null;
-        try {//Guarda la imagen redimensionada
-
-            fos = new FileOutputStream(fileImage);
-            bitmapImage = Bitmap.createBitmap(bitmapImage, 0, 0, width, height, new Matrix(), true);
-            bitmapImage.compress(Bitmap.CompressFormat.JPEG, 100, fos);
-
-            fos.close();
-        } catch (Exception e) {
-            Log.e(TAG, "Error copiando archivo");
-
-            e.printStackTrace();
-        }
-
-    }
 
 
-    /**
-     * Sube el archivo de la última foto capturada al servidor, si va bien la subida empieza la subida de la información a la API
-     */
-    public void subirFoto() {
-        if (!checkInternet(getApplicationContext())) {//Si no hay internet cancela la subida
-            estaSubiendo = false;
-            return;
-        }
-
-        final Foto foto = getLastFotoNoSubida();
-
-        if (foto == null) {//Si no hay fotos, cancela la subida
-            estaSubiendo = false;
-            Log.i(TAG, "No hay fotos no subidas");
-            return;
-        }
-
-        final File fileFoto = new File(ruta_sd_resize, foto.getNombre());//Foto que subirá
-
-        estaSubiendo = true;//Si llega hasta aqui, se podrá hacer la subida
-
-        //Retrofit
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(ITrianaSatAPI.ENDPOINT_SALESIANOS)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        // create upload service client
-        ITrianaSatAPI service =
-                retrofit.create(ITrianaSatAPI.class);
-
-        // create RequestBody instance from file
-        RequestBody requestFile =
-                RequestBody.create(MediaType.parse("multipart/form-data"), fileFoto);
-
-        // MultipartBody.Part is used to send also the actual file name
-        MultipartBody.Part body =
-                MultipartBody.Part.createFormData("fichero", fileFoto.getName(), requestFile);//'fichero' es el nombre en el que el servidor recibe la foto
-
-        // finally, execute the request
-        Call<ResponseBody> call = service.subirFoto(body);
-        call.enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call,
-                                   Response<ResponseBody> response) {
-
-                if (response.isSuccessful()) {
-                    Log.i(TAG, "Retrofit success: " + fileFoto.getName());
-
-                    subirFotoInfo(foto);//Sube información de la foto a la API
-                } else {
-                    Log.i(TAG, "Retrofit Error Code: " + response.code() + " " + fileFoto.getName());
-                    subirFoto();//Intenta otra vez la subida
-                }
-
-            }
-
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                Log.e(TAG, "Retrofit onfailure: " + t.getMessage() + " " + fileFoto.getName());
-                subirFoto();//Intenta otra vez la subida
-            }
-        });
-
-    }
-
-    /**
-     * Sube la información de la foto
-     *
-     * @param foto Objeto que lleva parte de la información de la foto
-     */
-    public void subirFotoInfo(final Foto foto) {
-        String urlFoto = "http://www.salesianos-triana.com/dam/trianasat/files/" + foto.getNombre();//Construye URL foto
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(ITrianaSatAPI.ENDPOINT_API)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        ITrianaSatAPI service =
-                retrofit.create(ITrianaSatAPI.class);
-
-        String FORMAT_DATE = "dd-MM-yy_HH:mm:ss";
-        String fecha_subida = new SimpleDateFormat(FORMAT_DATE).format(Calendar.getInstance().getTime());
-
-
-        final FotoInfo fotoInfo = new FotoInfo(foto.getFechaMilisegundos(), fecha_subida, urlFoto, foto.getBateria(), getHrefProyecto());
-
-        Call<ResponseBody> call = service.subirFotoInfo(fotoInfo);
-        call.enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call,
-                                   Response<ResponseBody> response) {
-
-                if (response.isSuccessful()) {
-                    Log.i(TAG, "Retrofit InfoFoto success: " + foto.getNombre());
-
-                    updateFoto(foto.getId(), 1);//Establece la foto como subida en la base de datos
-
-                    //Elimina la foto redimensionada
-                    final File fileFoto = new File(ruta_sd_resize, foto.getNombre());
-                    if (fileFoto.delete()) {
-                        Log.i(TAG, fileFoto.getAbsolutePath() + ": Borrado");
-                    } else
-                        Log.i(TAG, fileFoto.getAbsolutePath() + ": No borrado");
-
-                    subirFoto();//Inicia subida
-                } else {
-                    Log.i(TAG, "Retrofit Error InfoFoto Code: " + response.code() + ", " + response.message() + ", " + foto.getNombre());
-                    subirFoto();//Inicia subida
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                Log.e(TAG, "Retrofit InfoFoto onfailure: " + t.getMessage() + " " + foto.getNombre());
-                subirFoto();//Inicia subida
-            }
-        });
-    }
-
-    /**
-     * Comprueba si hay internet
-     *
-     * @param ctx Contexto
-     * @return
-     */
-    public boolean checkInternet(Context ctx) {
-        boolean bandera = true;
-        ConnectivityManager conMgr = (ConnectivityManager) ctx.getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        NetworkInfo i = conMgr.getActiveNetworkInfo();
-        if (i == null || !i.isConnected() || !i.isAvailable()) {
-            bandera = false;
-            Log.i(TAG, "No hay internet, no se puede realizar la subida");
-        } else {
-            Log.i(TAG, "Hay internet, iniciando subida");
-        }
-
-        return bandera;
-
-    }
 
     /*****************************************/
     /*********** BASE DE DATOS **************/
@@ -619,6 +426,16 @@ public class TimelapseService extends HiddenCameraService {
         String url = prefs.getString(Constantes.PREF_HREF_PROYECTO, "");
 
         return url;
+    }
+
+    /**
+     * Consulta nombre del proyecto vinculado
+     */
+    public String getNombreProyecto() {
+        SharedPreferences prefs =
+                getSharedPreferences(Constantes.PREFERENCIAS_API, Context.MODE_PRIVATE);
+
+        return prefs.getString(Constantes.PREF_NOMBRE_PROYECTO, "");
     }
 
     @Override

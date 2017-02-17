@@ -1,0 +1,44 @@
+<!--
+  ~ Copyright 2016 Keval Patel.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<resources>
+    <string name="app_name">TimelapseLocal</string>
+    <string name="title_button_service">Lanzar servicio</string>
+    <string name="settings">Ajustes</string>
+    <string name="title_bateria_frecuencia">Batería-Frecuencia</string>
+    <string name="title_memoria_calidad">Memoria-Calidad</string>
+    <string name="title_preferencias">Preferencias guardadas:</string>
+    <string name="title_bateria">Nivel de batería</string>
+    <string name="title_frecuencia">Frecuencia de fotos</string>
+    <string name="title_memoria">Memoria restante</string>
+    <string name="title_calidad">Calidad de foto</string>
+    <string name="summary_calidad">Controlar la calidad con la que se harán las fotos según la memoria restante</string>
+    <string name="summary_memoria">Controlar memoria restante para calidad de fotos</string>
+    <string name="summary_frecuencia">Frecuencia con las que se harán las fotos según el nivel de batería</string>
+    <string name="summary_bateria">Nivel de batería al que quieras que se cambie la frecuencia</string>
+    <string name="title_button_stop_service">Parar servicio</string>
+    <string name="title_total_fotos">Total fotos</string>
+    <string name="title_num_fotos">Número de fotos</string>
+    <string name="summary_num_fotos">Número total de fotos que hará la aplicación</string>
+    <string name="ok">Ok</string>
+    <string name="tiene_codigo_valido">Proyecto no encontrado</string>
+    <string name="dar_alta_proyecto">¿Tiene un código válido? Acceda a su panel de configuración del proyecto en </string>
+    <string name="action_desvincular_proyecto">Desvincular</string>
+    <string name="desvincular_mensaje">¿Desea desvincular el proyecto de su dispositivo? Se borrarán todos los datos</string>
+    <string name="aceptar">Aceptar</string>
+    <string name="cancelar">Cancelar</string>
+    <string name="vincular_proyecto">VINCULAR A PROYECTO</string>
+</resources>

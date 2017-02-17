@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package salesianostriana.timelapse.activities;
+package salesianostriana.timelapselocal.activities;
 
 import android.app.ActivityManager;
 import android.app.AlertDialog;
@@ -23,7 +23,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -32,12 +31,12 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import salesianostriana.timelapse.Constantes;
-import salesianostriana.timelapse.R;
-import salesianostriana.timelapse.TimelapseService;
-import salesianostriana.timelapse.bd.FotosDatabase;
+import salesianostriana.timelapselocal.Constantes;
+import salesianostriana.timelapselocal.bd.FotosDatabase;
+import salesianostriana.timelapselocal.R;
+import salesianostriana.timelapselocal.TimelapseService;
 
-import static salesianostriana.timelapse.Constantes.PREFERENCIAS_API;
+import static salesianostriana.timelapselocal.Constantes.PREFERENCIAS_API;
 
 /**
  * Activity encargado de lanzar el servicio de Timelapse
@@ -70,8 +69,7 @@ public class TimelapseActivity extends AppCompatActivity {
                 startService(new Intent(TimelapseActivity.this, TimelapseService.class));
                 if (isMyServiceRunning(TimelapseService.class)) {
                     estadoServicio.setText("Servicio Activo");
-                    estadoServicio.setTextColor(ContextCompat.getColor(TimelapseActivity.this, R.color.colorVerdeActivo));
-                    ;
+                    estadoServicio.setTextColor(getResources().getColor(android.R.color.holo_green_light));
                 }
             }
         });
@@ -128,9 +126,7 @@ public class TimelapseActivity extends AppCompatActivity {
         return false;
     }
 
-    /***********
-     * MENÚ
-     **************/
+    /*********** MENÚ **************/
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();

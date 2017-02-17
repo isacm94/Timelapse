@@ -1,4 +1,4 @@
-package salesianostriana.timelapse;
+package salesianostriana.timelapselocal;
 
 /**
  * Created by dparejo on 06/02/2017.
