@@ -292,7 +292,7 @@ public class TimelapseService extends HiddenCameraService {
      * @param filename    Nombre de la imagen
      */
     public void resizeFoto(Bitmap bitmapImage, String filename) {
-        int width = 2000, height = 1500;
+        int width = 1500, height = 2000;
         if (!ruta_sd_resize.exists()) {
             ruta_sd_resize.mkdir();
         }
@@ -303,7 +303,7 @@ public class TimelapseService extends HiddenCameraService {
         try {//Guarda la imagen redimensionada
 
             fos = new FileOutputStream(fileImage);
-            bitmapImage = Bitmap.createBitmap(bitmapImage, 0, 0, width, height, new Matrix(), true);
+            bitmapImage = Bitmap.createScaledBitmap(bitmapImage, width, height,false);
             bitmapImage.compress(Bitmap.CompressFormat.JPEG, 100, fos);
 
             fos.close();
